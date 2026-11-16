@@ -3,6 +3,13 @@
 Notes for each release, written for people using MacCursor. The newest version is at the top.
 The section for a version is what the update dialog shows.
 
+## [0.4.3] - 2026-11-16
+
+- Easier to leave **Presentation mode**:
+  - a notice on screen says it's on and how to turn it off, and another says when it's off;
+  - press **⌃⌥T**, or **press and hold a click for 2 seconds** anywhere;
+  - MacCursor's menu bar icon and menu keep working while it's on, so you can untick it there.
+
 ## [0.4.2] - 2026-11-16
 
 - The pointer now moves with you while you draw. Before, it stayed where the line started.

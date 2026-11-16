@@ -58,3 +58,26 @@ Needs a second display.
 
 To review the art without running the app: `build/MacCursor.app/Contents/MacOS/MacCursor --render build/snapshots`
 writes every style × palette × size as a PNG (the same images the snapshot tests compare).
+
+## Screen sharing
+
+| # | Do | Expect |
+|---|---|---|
+| S1 | Share your entire screen in Zoom or Google Meet; watch from another device | The viewer sees the paw and its click effects |
+| S2 | Record the screen with QuickTime or ⌘⇧5 | The recording shows the paw |
+| S3 | Share only one window | The paw doesn't show (macOS limitation, expected) |
+
+## Spec success criteria → where they're checked (`SPEC-pointer.md`)
+
+| # | Criterion | Checked by |
+|---|---|---|
+| 1 | check.sh passes | `./scripts/check.sh` |
+| 2 | Arrow never visible; back on toggle-off and quit | H1–H12 |
+| 3 | Tip within 1 pt of the click point | `DisplayLayoutTests`, `StyleCatalogTests`, D2 |
+| 4 | No visible lag at 120 Hz | T1, T2 |
+| 5 | Display changes rebuild within 1 s | D3, D4 |
+| 6 | 4 styles × 2 palettes render | `SnapshotTests`, L6 |
+| 7 | Size 0.4–1.6×, default 0.75×, kept | `PointerSettingsTests`, L1–L3 |
+| 8 | Auto color switches within 1 s | `PointerSettingsTests`, L4 |
+| 9 | CPU under 1% idle, 10% moving | T3, T4 |
+| 10 | Visible in a full-screen share | S1, S2 |

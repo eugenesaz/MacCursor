@@ -40,20 +40,18 @@ final class Overlay {
         window.orderFrontRegardless()
     }
 
-    func contains(_ p: CGPoint) -> Bool { NSMouseInRect(p, frame, false) }
+    func local(_ p: CGPoint) -> CGPoint { DisplayLayout.local(p, in: frame) }
 
-    func local(_ p: CGPoint) -> CGPoint { CGPoint(x: p.x - frame.minX, y: p.y - frame.minY) }
-
-    /// Leg leans in from the lower-right; more lean on the left side of the screen.
     func angle(at local: CGPoint) -> CGFloat {
-        let fx = max(0, min(1, local.x / frame.width))
-        return (8 + 20 * (1 - fx)) * .pi / 180
+        DisplayLayout.leanAngle(localX: local.x, width: frame.width)
     }
 
-    func update(mouse: CGPoint, now: CFTimeInterval, scale: CGFloat, squash: CGFloat) {
-        let inside = contains(mouse)
-        rig.root.isHidden = !inside
-        if inside {
+    /// `active`: this display shows the pointer (exactly one display does).
+    func update(
+        mouse: CGPoint, active: Bool, now: CFTimeInterval, scale: CGFloat, squash: CGFloat
+    ) {
+        rig.root.isHidden = !active
+        if active {
             let p = local(mouse)
             rig.setPose(position: p, angle: angle(at: p), scale: scale, squash: squash)
         }
@@ -80,6 +78,8 @@ final class Overlay {
 
 final class OverlayController {
     private var overlays: [Overlay] = []
+    private var layout = DisplayLayout(frames: [])
+    private var pendingRebuild: DispatchWorkItem?
     private var timer: Timer?
     private var monitors: [Any] = []
     private var clickTimes: [CFTimeInterval] = []
@@ -100,7 +100,7 @@ final class OverlayController {
             object: nil, queue: .main
         ) { [weak self] _ in
             guard let self, self.isEnabled else { return }
-            self.rebuild()
+            self.scheduleRebuild()
         }
     }
 
@@ -156,9 +156,25 @@ final class OverlayController {
                 style: settings.pointer.style))
     }
 
+    /// Display changes arrive in bursts (one per display and property); rebuild once after.
+    private func scheduleRebuild() {
+        pendingRebuild?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            guard let self, self.isEnabled else { return }
+            self.rebuild()
+        }
+        pendingRebuild = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25, execute: work)
+    }
+
+    private func activeOverlay(for mouse: CGPoint) -> Overlay? {
+        layout.index(containing: mouse).map { overlays[$0] }
+    }
+
     private func rebuild() {
         for overlay in overlays { overlay.close() }
         overlays = NSScreen.screens.map(Overlay.init)
+        layout = DisplayLayout(frames: overlays.map(\.frame))
         refreshStyle()
         log("overlays: \(overlays.count) display(s)")
     }
@@ -180,8 +196,11 @@ final class OverlayController {
         let mouse = NSEvent.mouseLocation
         CATransaction.begin()
         CATransaction.setDisableActions(true)
+        let active = activeOverlay(for: mouse)
         for overlay in overlays {
-            overlay.update(mouse: mouse, now: now, scale: mood.scale, squash: squash)
+            overlay.update(
+                mouse: mouse, active: overlay === active, now: now,
+                scale: mood.scale, squash: squash)
         }
         CATransaction.commit()
     }
@@ -197,7 +216,7 @@ final class OverlayController {
         let mouse = NSEvent.mouseLocation
         CATransaction.begin()
         CATransaction.setDisableActions(true)
-        overlays.first { $0.contains(mouse) }?
+        activeOverlay(for: mouse)?
             .addEffect(
                 at: mouse, art: art, palette: palette, intensity: lastIntensity, scale: mood.scale,
                 now: now)

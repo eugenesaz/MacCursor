@@ -21,3 +21,15 @@ Style: Dog paw, with "Hide system cursor" on.
 | H10 | Run `build/MacCursor.app/Contents/MacOS/MacCursor` in Terminal, then press Ctrl-C | The arrow comes back |
 | H11 | Start it again and run `killall -TERM MacCursor`, then `killall -HUP MacCursor` | The arrow comes back each time |
 | H12 | Start it again and run `killall -KILL MacCursor` (a crash) | The arrow comes back within a second, since the window server drops our cursor with our connection. If it doesn't, file a bug |
+
+## Displays
+Needs a second display.
+
+| # | Do | Expect |
+|---|---|---|
+| D1 | Move the pointer slowly across the border between displays, in both directions | The paw jumps across with no gap and never shows twice |
+| D2 | Click at each corner of each display | The click lands exactly under the paw's tip |
+| D3 | Unplug the second display, then plug it back in | Within a second the paw works on both; no leftover windows (check Mission Control) |
+| D4 | Change one display's resolution or arrangement in System Settings | The paw stays on the cursor afterwards |
+| D5 | Mix a Retina and a non-Retina display | The paw is crisp on both |
+| D6 | Open a full-screen app on one display, and Mission Control | The paw stays visible above both |

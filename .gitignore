@@ -4,3 +4,10 @@ research/
 .build/
 build/
 .DS_Store
+
+# Local working notes and agent setup (not published)
+tasks/
+CLAUDE.md
+.claude/
+CAPABILITIES.md
+SPEC*.md

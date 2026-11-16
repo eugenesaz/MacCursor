@@ -1,4 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="14" fill="#4f46e5"/>
-  <text x="32" y="32" dy="0.35em" text-anchor="middle" font-family="ui-sans-serif, system-ui, -apple-system, sans-serif" font-size="32" font-weight="600" fill="#ffffff">M</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- MacCursor app icon. Source for Resources/AppIcon.icns: run scripts/make-app-icon.sh after editing. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6366f1"/>
+      <stop offset="1" stop-color="#3730a3"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FFF3B0"/>
+      <stop offset="1" stop-color="#FFC83D"/>
+    </radialGradient>
+  </defs>
+  <!-- macOS icon grid: 824 x 824 body centred on the 1024 canvas. -->
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#bg)"/>
+  <!-- The highlight, centred on the pointer's hot spot. -->
+  <circle cx="478" cy="400" r="250" fill="#FFD23F" fill-opacity="0.25"/>
+  <circle cx="478" cy="400" r="200" fill="url(#glow)"/>
+  <!-- Arrow pointer, tip on the hot spot. -->
+  <path transform="translate(478 400) scale(22)"
+        d="M0 0 L0 16.5 L4 12.8 L6.9 19.4 L9.6 18.2 L6.8 11.8 L12.2 11.8 Z"
+        fill="#ffffff" stroke="#111827" stroke-width="1.1" stroke-linejoin="round"/>
 </svg>

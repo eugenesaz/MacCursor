@@ -3,6 +3,12 @@
 Notes for each release, written for people using MacCursor. The newest version is at the top.
 The section for a version is what the update dialog shows.
 
+## [Unreleased]
+
+- MacCursor has an app icon in Finder, the Applications folder and the Dock.
+- The menu bar icon is now an arrow pointer instead of a paw: highlighted when the pointer is
+  on, plain when it's off, and a screen with a pointer in presentation mode.
+
 ## [0.3.1] - 2026-11-16
 
 - Styles with a jet flame can make it as long as the paws' legs: add `"length": 560` to the

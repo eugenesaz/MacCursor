@@ -148,10 +148,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     private func updateIcon() {
+        // A highlighted arrow when on, a plain one when off, a screen while presenting.
         let name =
             controller.presentation.isOn
-            ? "pawprint.circle.fill"
-            : pointer.isEnabled ? "pawprint.fill" : "pawprint"
+            ? "rectangle.inset.filled.and.cursorarrow"
+            : pointer.isEnabled ? "cursorarrow.rays" : "cursorarrow"
         statusItem.button?.image = NSImage(
             systemSymbolName: name, accessibilityDescription: "MacCursor")
     }

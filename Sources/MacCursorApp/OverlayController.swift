@@ -134,9 +134,9 @@ final class OverlayController {
     private var lastClick: CFTimeInterval = -10
     private var lastIntensity: CGFloat = 1
     private var art = Skins.art(for: .dogPaw)
-    private var palette = Palette.forLightScreens
+    private(set) var palette = Palette.forLightScreens
     private var lastSystemDark = false
-    private let settings = Settings.shared
+    let settings = Settings.shared
     let presentation = PresentationMode()
     private(set) var isEnabled = false
 
@@ -237,8 +237,10 @@ final class OverlayController {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.25, execute: work)
     }
 
+    func displayIndex(for mouse: CGPoint) -> Int? { layout.index(containing: mouse) }
+
     private func activeOverlay(for mouse: CGPoint) -> Overlay? {
-        layout.index(containing: mouse).map { overlays[$0] }
+        displayIndex(for: mouse).map { overlays[$0] }
     }
 
     private func rebuild() {
@@ -252,7 +254,7 @@ final class OverlayController {
     }
 
     /// Pointer scale: the size setting (the mood no longer scales the pointer).
-    private var size: CGFloat { CGFloat(settings.pointer.size) }
+    private var scale: CGFloat { CGFloat(settings.pointer.size) }
 
     /// Redraws on the next frame, e.g. after the size changed.
     func wakeOverlays() {
@@ -275,7 +277,7 @@ final class OverlayController {
         let mouse = NSEvent.mouseLocation
         overlay.update(
             mouse: mouse, active: overlay === activeOverlay(for: mouse), now: now,
-            scale: size, squash: squash)
+            scale: scale, squash: squash)
     }
 
     private func handleClick() {
@@ -291,7 +293,7 @@ final class OverlayController {
         CATransaction.setDisableActions(true)
         activeOverlay(for: mouse)?
             .addEffect(
-                at: mouse, art: art, palette: palette, intensity: lastIntensity, scale: size,
+                at: mouse, art: art, palette: palette, intensity: lastIntensity, scale: scale,
                 now: now)
         CATransaction.commit()
         if settings.sound, let s = NSSound(named: "Pop")?.copy() as? NSSound {

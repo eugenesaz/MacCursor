@@ -7,6 +7,9 @@ import MacCursorRender
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var statusItem: NSStatusItem!
     private let controller = OverlayController()
+    /// Pointer state goes through here; `controller` is used directly only for the
+    /// presentation-mode prototype until the `presentation` module replaces it.
+    private var pointer: PointerController { controller }
     private let settings = Settings.shared
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -24,17 +27,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             [weak self] in
             self?.togglePresentation()
         }
-        controller.setEnabled(true)
+        pointer.setEnabled(true)
     }
 
     func applicationWillTerminate(_ notification: Notification) {
-        controller.setEnabled(false)
+        pointer.setEnabled(false)
     }
 
     // MARK: Actions
 
     @objc private func togglePointer() {
-        controller.setEnabled(!controller.isEnabled)
+        pointer.setEnabled(!pointer.isEnabled)
         updateIcon()
     }
 
@@ -42,7 +45,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if controller.presentation.isOn {
             controller.presentation.disable()
         } else {
-            if !controller.isEnabled { controller.setEnabled(true) }
+            if !pointer.isEnabled { pointer.setEnabled(true) }
             if !controller.presentation.enable() {
                 let alert = NSAlert()
                 alert.messageText = "Presentation mode needs Accessibility access"
@@ -56,8 +59,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc private func pickSkin(_ sender: NSMenuItem) {
-        settings.pointer.style = PointerStyle(rawValue: sender.representedObject as! String)!
-        controller.refreshStyle()
+        pointer.style = PointerStyle(rawValue: sender.representedObject as! String)!
     }
 
     @objc private func pickMood(_ sender: NSMenuItem) {
@@ -65,27 +67,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc private func pickColor(_ sender: NSMenuItem) {
-        settings.pointer.colorMode = ColorMode(rawValue: sender.representedObject as! String)!
-        controller.refreshStyle()
+        pointer.colorMode = ColorMode(rawValue: sender.representedObject as! String)!
     }
 
     @objc private func sizeChanged(_ sender: NSSlider) {
-        settings.pointer.size = sender.doubleValue
-        controller.wakeOverlays()
+        pointer.size = sender.doubleValue
     }
 
     @objc private func toggleSound() { settings.sound.toggle() }
 
     @objc private func toggleHideCursor() {
-        settings.pointer.hidesSystemCursor.toggle()
-        controller.updateCursorVisibility()
+        pointer.hidesSystemCursor.toggle()
     }
 
     private func updateIcon() {
         let name =
             controller.presentation.isOn
             ? "pawprint.circle.fill"
-            : controller.isEnabled ? "pawprint.fill" : "pawprint"
+            : pointer.isEnabled ? "pawprint.fill" : "pawprint"
         statusItem.button?.image = NSImage(
             systemSymbolName: name, accessibilityDescription: "MacCursor")
     }
@@ -96,7 +95,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.removeAllItems()
 
         let show = item("Show pointer", #selector(togglePointer), key: "p")
-        show.state = controller.isEnabled ? .on : .off
+        show.state = pointer.isEnabled ? .on : .off
         menu.addItem(show)
         let pres = item("Presentation mode", #selector(togglePresentation), key: "t")
         pres.state = controller.presentation.isOn ? .on : .off
@@ -107,7 +106,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         for kind in PointerStyle.allCases {
             let i = item(kind.title, #selector(pickSkin(_:)))
             i.representedObject = kind.rawValue
-            i.state = settings.pointer.style == kind ? .on : .off
+            i.state = pointer.style == kind ? .on : .off
             menu.addItem(i)
         }
 
@@ -127,7 +126,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         for mode in ColorMode.allCases {
             let i = item(mode.title, #selector(pickColor(_:)))
             i.representedObject = mode.rawValue
-            i.state = settings.pointer.colorMode == mode ? .on : .off
+            i.state = pointer.colorMode == mode ? .on : .off
             colorMenu.addItem(i)
         }
         colorItem.submenu = colorMenu
@@ -138,7 +137,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         sound.state = settings.sound ? .on : .off
         menu.addItem(sound)
         let hide = item("Hide system cursor", #selector(toggleHideCursor))
-        hide.state = settings.pointer.hidesSystemCursor ? .on : .off
+        hide.state = pointer.hidesSystemCursor ? .on : .off
         menu.addItem(hide)
 
         menu.addItem(.separator())
@@ -158,7 +157,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private func sizeSliderItem() -> NSMenuItem {
         let range = PointerSettings.sizeRange
         let slider = NSSlider(
-            value: settings.pointer.size, minValue: range.lowerBound, maxValue: range.upperBound,
+            value: pointer.size, minValue: range.lowerBound, maxValue: range.upperBound,
             target: self, action: #selector(sizeChanged(_:)))
         slider.isContinuous = true
         slider.frame = NSRect(x: 20, y: 4, width: 180, height: 22)

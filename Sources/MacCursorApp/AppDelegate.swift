@@ -28,6 +28,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             [weak self] in
             self?.togglePresentation()
         }
+        StyleStore.shared.onChange = { [weak self] in self?.controller.refreshStyle() }
+        StyleStore.shared.start()
         pointer.setEnabled(true)
     }
 
@@ -62,6 +64,37 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc private func pickSkin(_ sender: NSMenuItem) {
         guard let id = sender.representedObject as? String else { return }
         pointer.styleID = id
+    }
+
+    @objc private func openStylesFolder() { StyleStore.shared.openFolder() }
+
+    @objc private func showStyleProblems() {
+        let failures = StyleStore.shared.library.failures
+        showProblems(
+            title: "Some styles couldn't load",
+            message:
+                "Fix these in the style's files; MacCursor picks up the change as soon as you save.",
+            lines: failures.flatMap(\.messages))
+    }
+
+    /// An alert with a scrolling, selectable list, so problems can be copied.
+    func showProblems(title: String, message: String, lines: [String]) {
+        let alert = NSAlert()
+        alert.messageText = title
+        alert.informativeText = message
+        let scroll = NSScrollView(frame: NSRect(x: 0, y: 0, width: 460, height: 160))
+        scroll.hasVerticalScroller = true
+        scroll.borderType = .bezelBorder
+        let text = NSTextView(frame: scroll.bounds)
+        text.isEditable = false
+        text.isSelectable = true
+        text.font = .monospacedSystemFont(ofSize: 11, weight: .regular)
+        text.string = lines.joined(separator: "\n")
+        text.autoresizingMask = [.width]
+        scroll.documentView = text
+        alert.accessoryView = scroll
+        NSApp.activate(ignoringOtherApps: true)
+        alert.runModal()
     }
 
     @objc private func pickMood(_ sender: NSMenuItem) {
@@ -113,12 +146,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(header("Style"))
         let library = StyleStore.shared.library
         let current = library.resolved(id: pointer.styleID).id
-        for pack in library.builtins {
+        for (n, pack) in library.all.enumerated() {
+            if n == library.builtins.count { menu.addItem(.separator()) }
             let i = item(pack.name, #selector(pickSkin(_:)))
             i.representedObject = pack.id
             i.state = pack.id == current ? .on : .off
+            if !pack.author.isEmpty && !library.isBuiltin(id: pack.id) {
+                i.toolTip = "By \(pack.author) · \(pack.license)"
+            }
             menu.addItem(i)
         }
+        let failed = library.failures.count
+        if failed > 0 {
+            let title = "\(failed) style\(failed == 1 ? "" : "s") couldn't load…"
+            menu.addItem(item(title, #selector(showStyleProblems)))
+        }
+        menu.addItem(item("Open Styles Folder", #selector(openStylesFolder)))
 
         menu.addItem(header("Size"))
         menu.addItem(

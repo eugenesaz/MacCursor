@@ -136,6 +136,8 @@ final class OverlayController {
     private var appearanceObservation: NSKeyValueObservation?
     private var monitors: [Any] = []
     private var clickTimes: [CFTimeInterval] = []
+    /// Plays the click sound; the menu uses it for previews.
+    let clickSound = ClickSoundPlayer()
     private var lastClick: CFTimeInterval = -10
     private var lastIntensity: CGFloat = 1
     private var pack = StyleStore.shared.pack(for: Settings.shared.pointer.styleID)
@@ -350,7 +352,7 @@ final class OverlayController {
         lastClick = now
         let mood = settings.mood
         // Faster clicking → bigger reaction.
-        lastIntensity = min(1 + CGFloat(clickTimes.count - 1) * 0.55, 3.2) * mood.intensity
+        lastIntensity = min(1 + CGFloat(clickTimes.count - 1) * 0.55, 3.2) * CGFloat(mood.intensity)
         let mouse = NSEvent.mouseLocation
         CATransaction.begin()
         CATransaction.setDisableActions(true)
@@ -360,9 +362,6 @@ final class OverlayController {
                 scale: scale,
                 now: now)
         CATransaction.commit()
-        if settings.sound, let s = NSSound(named: "Pop")?.copy() as? NSSound {
-            s.volume = 0.4
-            s.play()
-        }
+        clickSound.click(recentClicks: clickTimes.count)
     }
 }

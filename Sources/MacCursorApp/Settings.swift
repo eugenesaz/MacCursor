@@ -2,19 +2,6 @@ import AppKit
 import MacCursorCore
 import MacCursorRender
 
-enum Mood: String, CaseIterable {
-    case subtle, normal, wild
-
-    var title: String {
-        switch self {
-        case .subtle: return "Subtle"
-        case .normal: return "Normal"
-        case .wild: return "Wild"
-        }
-    }
-    var intensity: CGFloat { [.subtle: 0.6, .normal: 1.0, .wild: 1.6][self]! }
-}
-
 /// UserDefaults-backed preferences.
 @MainActor
 final class Settings {
@@ -25,10 +12,7 @@ final class Settings {
         get { Mood(rawValue: d.string(forKey: "mood") ?? "") ?? .normal }
         set { d.set(newValue.rawValue, forKey: "mood") }
     }
-    var sound: Bool {
-        get { d.object(forKey: "sound") as? Bool ?? true }
-        set { d.set(newValue, forKey: "sound") }
-    }
+    let sound = SoundSettings(store: UserDefaults.standard)
 
     let pointer = PointerSettings(store: UserDefaults.standard)
 

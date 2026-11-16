@@ -44,7 +44,7 @@ extension OverlayController: PointerController {
         get { settings.pointer.tailLength }
         set {
             settings.pointer.tailLength = newValue
-            refreshStyle()
+            applyRig()
         }
     }
 

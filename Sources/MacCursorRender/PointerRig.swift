@@ -19,8 +19,6 @@ public final class PointerRig {
 
     static let outlineWidth: CGFloat = 2.5
     static let legLength: CGFloat = 560
-    /// Tail lengths below this hide the leg: it would sit almost entirely under the paw.
-    public static let minTailLength: CGFloat = 0.02
 
     public init(contentsScale: CGFloat) {
         let all: [CALayer] = [
@@ -45,7 +43,7 @@ public final class PointerRig {
         root.addSublayer(front)
     }
 
-    /// - tailLength: 0…1 share of the full leg; below `minTailLength` there is no leg.
+    /// - tailLength: 0…1 share of the full leg; 0 = no leg.
     public func apply(art: SkinArt, palette: Palette, tailLength: CGFloat = 1) {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
@@ -70,7 +68,7 @@ public final class PointerRig {
         nails.path = art.nails
         nails.fillColor = art.nailColor
 
-        let hasLeg = art.armWidth > 0 && tailLength >= Self.minTailLength
+        let hasLeg = art.armWidth > 0 && tailLength > 0
         for l in [legEdgeL, legEdgeR, legFill] { l.isHidden = !hasLeg }
         guard hasLeg else { return }
         let w = art.armWidth

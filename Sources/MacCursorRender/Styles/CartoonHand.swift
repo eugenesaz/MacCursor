@@ -15,8 +15,9 @@ extension Skins {
                 strokingWithWidth: 2 * r, lineCap: .round, lineJoin: .round, miterLimit: 4)
         }
         func circle(_ c: CGPoint, _ r: CGFloat) -> CGPath {
-            CGPath(ellipseIn: CGRect(x: c.x - r, y: c.y - r, width: 2 * r, height: 2 * r),
-                   transform: nil)
+            CGPath(
+                ellipseIn: CGRect(x: c.x - r, y: c.y - r, width: 2 * r, height: 2 * r),
+                transform: nil)
         }
         func stroke(_ p: CGPath, _ w: CGFloat) -> CGPath {
             p.copy(strokingWithWidth: w, lineCap: .round, lineJoin: .round, miterLimit: 4)

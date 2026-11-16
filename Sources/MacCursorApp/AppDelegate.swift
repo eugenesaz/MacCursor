@@ -60,7 +60,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc private func pickSkin(_ sender: NSMenuItem) {
-        pointer.style = PointerStyle(rawValue: sender.representedObject as! String)!
+        guard let id = sender.representedObject as? String else { return }
+        pointer.styleID = id
     }
 
     @objc private func pickMood(_ sender: NSMenuItem) {
@@ -110,10 +111,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         menu.addItem(.separator())
         menu.addItem(header("Style"))
-        for kind in PointerStyle.allCases {
-            let i = item(kind.title, #selector(pickSkin(_:)))
-            i.representedObject = kind.rawValue
-            i.state = pointer.style == kind ? .on : .off
+        let library = StyleStore.shared.library
+        let current = library.resolved(id: pointer.styleID).id
+        for pack in library.builtins {
+            let i = item(pack.name, #selector(pickSkin(_:)))
+            i.representedObject = pack.id
+            i.state = pack.id == current ? .on : .off
             menu.addItem(i)
         }
 

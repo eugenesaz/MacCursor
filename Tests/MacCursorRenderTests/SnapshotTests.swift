@@ -13,9 +13,18 @@ import Testing
         .deletingLastPathComponent().appendingPathComponent("Snapshots")
     static let updating = ProcessInfo.processInfo.environment["UPDATE_SNAPSHOTS"] == "1"
 
-    @Test(arguments: SnapshotRenderer.allCases.map(\.name))
+    static var allCases: [SnapshotRenderer.Case] {
+        SnapshotRenderer.cases(for: BuiltinPacks.library.builtins)
+    }
+
+    @Test func builtinPacksAllLoad() {
+        #expect(BuiltinPacks.library.failures.isEmpty, "\(BuiltinPacks.library.failures)")
+        #expect(BuiltinPacks.library.builtins.map(\.id) == StyleLibrary.builtinOrder)
+    }
+
+    @Test(arguments: Self.allCases.map(\.name))
     func matchesReference(name: String) throws {
-        let c = try #require(SnapshotRenderer.allCases.first { $0.name == name })
+        let c = try #require(Self.allCases.first { $0.name == name })
         let image = try #require(SnapshotRenderer.image(for: c))
         let url = Self.referenceDir.appendingPathComponent("\(name).png")
 
@@ -36,7 +45,7 @@ import Testing
     }
 
     @Test func everyReferenceHasACase() throws {
-        let names = Set(SnapshotRenderer.allCases.map { "\($0.name).png" })
+        let names = Set(Self.allCases.map { "\($0.name).png" })
         let files =
             (try? FileManager.default.contentsOfDirectory(atPath: Self.referenceDir.path))
             ?? []

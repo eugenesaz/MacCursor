@@ -1,0 +1,17 @@
+{
+  "format": 1,
+  "id": "ring",
+  "name": "Highlight ring",
+  "author": "MacCursor",
+  "license": "MIT",
+  "version": "1.0.0",
+  "art": "art.svg",
+  "hotspot": [30, 30],
+  "body": { "art": "body", "color": "#FFD23F59" },
+  "outline": { "color": "#FFD23F", "width": 3 },
+  "overlay": true,
+  "click": {
+    "ripple": "#FFD23F",
+    "particles": { "art": "dot", "color": "#FFD23F" }
+  }
+}

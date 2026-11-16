@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60">
+  <title>Highlight ring</title>
+  <!-- The silhouette; MacCursor draws its outline. -->
+  <path id="body" fill="#FFD23F59" d="M52 30 C52 17.8497 42.1503 8 30 8 C17.8497 8 8 17.8497 8 30 C8 42.1503 17.8497 52 30 52 C42.1503 52 52 42.1503 52 30 Z"/>
+</svg>

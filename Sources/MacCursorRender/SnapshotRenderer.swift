@@ -9,7 +9,7 @@ import UniformTypeIdentifiers
 public enum SnapshotRenderer {
     /// One snapshot case: what to draw and on which background.
     public struct Case: Sendable {
-        public let style: PointerStyle
+        public let pack: StylePack
         public let palette: PaletteKind
         public let size: Double
         public let click: Bool
@@ -20,22 +20,22 @@ public enum SnapshotRenderer {
             let bg = palette == .forLightScreens ? "light-screen" : "dark-screen"
             let tail = tailLength == 1 ? "" : "-tail\(String(format: "%.2f", tailLength))"
             return
-                "\(style.rawValue)-\(bg)-\(String(format: "%.2f", size))x-\(click ? "click" : "idle")\(tail)"
+                "\(pack.id)-\(bg)-\(String(format: "%.2f", size))x-\(click ? "click" : "idle")\(tail)"
         }
     }
 
-    /// Every style × palette at three sizes idle, plus a click at the default size.
-    /// Styles with a tail also get no tail and a short tail at the default size.
-    public static var allCases: [Case] {
-        PointerStyle.allCases.flatMap { style in
+    /// Every pack × palette at three sizes idle, plus a click at the default size.
+    /// Packs with a tail also get no tail and a short tail at the default size.
+    public static func cases(for packs: [StylePack]) -> [Case] {
+        packs.flatMap { pack in
             [PaletteKind.forLightScreens, .forDarkScreens].flatMap { palette in
                 [0.4, 0.75, 1.6].map {
-                    Case(style: style, palette: palette, size: $0, click: false)
+                    Case(pack: pack, palette: palette, size: $0, click: false)
                 }
-                    + [Case(style: style, palette: palette, size: 0.75, click: true)]
-                    + (Skins.art(for: style).hasTail ? [0, 0.2] : []).map {
+                    + [Case(pack: pack, palette: palette, size: 0.75, click: true)]
+                    + (pack.hasTail ? [0, 0.2] : []).map {
                         Case(
-                            style: style, palette: palette, size: 0.75, click: false,
+                            pack: pack, palette: palette, size: 0.75, click: false,
                             tailLength: $0)
                     }
             }
@@ -43,10 +43,10 @@ public enum SnapshotRenderer {
     }
 
     /// Writes a PNG of every case to `directory`, for design review.
-    public static func run(directory: String) {
+    public static func run(directory: String, packs: [StylePack]) {
         let dir = URL(fileURLWithPath: directory)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        for c in allCases {
+        for c in cases(for: packs) {
             let url = dir.appendingPathComponent("\(c.name).png")
             if let image = image(for: c) { writePNG(image, to: url) }
             print(url.path)
@@ -63,7 +63,7 @@ public enum SnapshotRenderer {
         root.bounds = CGRect(origin: .zero, size: canvas)
         root.backgroundColor = c.palette == .forLightScreens ? rgb(0xF5F5F5) : rgb(0x262626)
 
-        let pack = Skins.art(for: c.style)
+        let pack = c.pack
         // A shortened tail is drawn higher up, so all of it fits on the canvas.
         let tip = CGPoint(x: 120, y: c.tailLength < 1 ? 250 : 200)
         let angle: CGFloat = 18 * .pi / 180

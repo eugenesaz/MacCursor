@@ -1,0 +1,22 @@
+{
+  "format": 1,
+  "id": "catPaw",
+  "name": "Cat paw",
+  "author": "MacCursor",
+  "license": "MIT",
+  "version": "1.0.0",
+  "art": "art.svg",
+  "hotspot": [60, 20],
+  "body": { "art": "body", "color": "#1E1E22" },
+  "details": [
+    { "art": "pads", "color": "#FF8FB3" },
+    { "art": "claws", "color": "#C9CAD2" }
+  ],
+  "tail": {
+    "leg": { "width": 16.1, "join": [60, 61.4], "color": "#1E1E22" }
+  },
+  "click": {
+    "stamp": { "art": "stamp", "offset": 18.4 },
+    "particles": { "art": "particle", "color": "#FF4D73" }
+  }
+}

@@ -2,10 +2,13 @@ import AppKit
 import MacCursorCore
 import MacCursorRender
 
-// `MacCursor --render <dir>` renders every skin × palette × state to PNGs (no permissions needed).
+// `MacCursor --render <dir>` renders every built-in style × palette × state to PNGs
+// (no permissions needed).
 let args = CommandLine.arguments
 if let i = args.firstIndex(of: "--render"), i + 1 < args.count {
-    SnapshotRenderer.run(directory: args[i + 1])
+    let library = StyleLibrary.load(
+        builtinDirectory: StyleStore.builtinDirectory, userDirectory: nil)
+    SnapshotRenderer.run(directory: args[i + 1], packs: library.builtins)
     exit(0)
 }
 

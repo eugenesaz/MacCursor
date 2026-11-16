@@ -138,7 +138,7 @@ final class OverlayController {
     private var clickTimes: [CFTimeInterval] = []
     private var lastClick: CFTimeInterval = -10
     private var lastIntensity: CGFloat = 1
-    private var pack = Skins.art(for: .dogPaw)
+    private var pack = StyleStore.shared.pack(for: Settings.shared.pointer.styleID)
     private var activePalette = Palette.forLightScreens
     private var mouseWatch: Timer?
     private var lastWatchedMouse = CGPoint(x: -1, y: -1)
@@ -230,7 +230,7 @@ final class OverlayController {
 
     /// Re-read skin / color settings.
     func refreshStyle() {
-        pack = Skins.art(for: settings.pointer.style)
+        pack = StyleStore.shared.pack(for: settings.pointer.styleID)
         activePalette = settings.resolvedPalette()
         lastSystemDark = Settings.systemIsDark()
         applyRig()
@@ -253,7 +253,7 @@ final class OverlayController {
             CursorPolicy.hidesSystemCursor(
                 pointerOn: isEnabled && !sessionInactive,
                 settingOn: settings.pointer.hidesSystemCursor,
-                style: settings.pointer.style))
+                styleIsOverlay: pack.overlay))
     }
 
     /// Display changes arrive in bursts (one per display and property); rebuild once after.

@@ -15,7 +15,7 @@ final class MemoryStore: SettingsStore {
     var settings: PointerSettings { PointerSettings(store: store) }
 
     @Test func defaultsOnFirstLaunch() {
-        #expect(settings.style == .dogPaw)
+        #expect(settings.styleID == "dogPaw")
         #expect(settings.size == 0.75)
         #expect(settings.colorMode == .auto)
         #expect(settings.hidesSystemCursor == true)
@@ -23,12 +23,12 @@ final class MemoryStore: SettingsStore {
 
     @Test func valuesPersistInTheStore() {
         let s = settings
-        s.style = .catPaw
+        s.styleID = "catPaw"
         s.size = 1.2
         s.colorMode = .lightPointer
         s.hidesSystemCursor = false
         let reread = PointerSettings(store: store)
-        #expect(reread.style == .catPaw)
+        #expect(reread.styleID == "catPaw")
         #expect(reread.size == 1.2)
         #expect(reread.colorMode == .lightPointer)
         #expect(reread.hidesSystemCursor == false)
@@ -36,7 +36,7 @@ final class MemoryStore: SettingsStore {
 
     @Test func keepsThePOCKeys() {
         let s = settings
-        s.style = .ring
+        s.styleID = "ring"
         s.colorMode = .darkPointer
         #expect(store.values["skin"] as? String == "ring")
         #expect(store.values["colorMode"] as? String == "darkPointer")
@@ -55,7 +55,7 @@ final class MemoryStore: SettingsStore {
         store.values = [
             "skin": "unicorn", "colorMode": 42, "size": "big", "hideSystemCursor": "yes",
         ]
-        #expect(settings.style == .dogPaw)
+        #expect(settings.styleID == "unicorn", "an unknown id is kept; the app falls back")
         #expect(settings.colorMode == .auto)
         #expect(settings.size == 0.75)
         #expect(settings.hidesSystemCursor == true)
@@ -107,7 +107,17 @@ final class MemoryStore: SettingsStore {
         #expect(s.paletteKind(systemIsDark: systemIsDark) == expected)
     }
 
-    @Test func everyStyleHasATitle() {
-        for style in PointerStyle.allCases { #expect(!style.title.isEmpty) }
+    /// Ids saved by v0.1.x (the old style enum's raw values) read back unchanged.
+    @Test(arguments: ["dogPaw", "catPaw", "finger", "ring"])
+    func oldStyleIDsCarryOver(id: String) {
+        store.values["skin"] = id
+        #expect(settings.styleID == id)
+    }
+
+    @Test func nonTextOrEmptyStyleFallsBackToTheDogPaw() {
+        store.values["skin"] = 3
+        #expect(settings.styleID == "dogPaw")
+        store.values["skin"] = ""
+        #expect(settings.styleID == "dogPaw")
     }
 }

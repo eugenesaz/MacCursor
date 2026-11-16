@@ -195,7 +195,7 @@ public enum StylePackLoader {
         !name.isEmpty && !name.hasPrefix(".") && !name.contains("/") && !name.contains("\\")
     }
 
-    private static func artFileName(_ json: Data) -> String? {
+    static func artFileName(_ json: Data) -> String? {
         (try? JSONSerialization.jsonObject(with: json) as? [String: Any])?["art"] as? String
     }
 

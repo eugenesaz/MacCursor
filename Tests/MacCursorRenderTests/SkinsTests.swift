@@ -55,6 +55,18 @@ import Testing
         #expect(dark == (kind == .forLightScreens))
     }
 
+    /// The cartoon hand is black and white only: every color it draws with is a grey.
+    @Test func cartoonHandIsGrayscale() {
+        let art = Skins.art(for: .finger)
+        let colors = [art.fur, art.padColor, art.nailColor, art.particleColor, art.legColor]
+        for case let c? in colors {
+            let p = c.converted(
+                to: CGColorSpace(name: CGColorSpace.sRGB)!, intent: .defaultIntent, options: nil)!
+                .components!
+            #expect(abs(p[0] - p[1]) < 0.01 && abs(p[1] - p[2]) < 0.01, "not grey: \(p)")
+        }
+    }
+
     private func luminance(_ c: CGColor) -> Double {
         let srgb = c.converted(
             to: CGColorSpace(name: CGColorSpace.sRGB)!, intent: .defaultIntent, options: nil)!

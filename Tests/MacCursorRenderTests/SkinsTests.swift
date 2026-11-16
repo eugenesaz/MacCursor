@@ -45,6 +45,21 @@ import Testing
         }
     }
 
+    /// The leg is centred under the art where it joins (the paw or the cuff), and its
+    /// top corners are hidden inside it, so it doesn't look shifted to one side.
+    @Test(arguments: PointerStyle.allCases.filter { !$0.keepsSystemCursor })
+    func legIsCentredWhereItJoins(style: PointerStyle) throws {
+        let art = Skins.art(for: style)
+        let y = art.armTop + 1
+        let box = art.silhouette.boundingBoxOfPath
+        let xs = stride(from: box.minX, through: box.maxX, by: 0.25)
+            .filter { art.silhouette.contains(CGPoint(x: $0, y: y)) }
+        let left = try #require(xs.first)
+        let right = try #require(xs.last)
+        #expect(abs(art.armX - (left + right) / 2) <= 1, "\(style): art spans \(left)…\(right)")
+        #expect(left < art.armX - art.armWidth / 2 && art.armX + art.armWidth / 2 < right)
+    }
+
     /// Both palettes exist and contrast with each other, so each reads on its background.
     @Test(arguments: [PaletteKind.forLightScreens, .forDarkScreens])
     func palettesHaveContrastingOutlines(kind: PaletteKind) {

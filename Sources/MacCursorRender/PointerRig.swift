@@ -73,9 +73,10 @@ public final class PointerRig {
         let w = art.armWidth
         let len = Self.legLength
         let top = art.armTop + 12
-        legEdgeL.frame = CGRect(x: -w / 2 - ow, y: top - len, width: ow * 2, height: len)
-        legEdgeR.frame = CGRect(x: w / 2 - ow, y: top - len, width: ow * 2, height: len)
-        legFill.frame = CGRect(x: -w / 2, y: top - len, width: w, height: len)
+        let x = art.armX
+        legEdgeL.frame = CGRect(x: x - w / 2 - ow, y: top - len, width: ow * 2, height: len)
+        legEdgeR.frame = CGRect(x: x + w / 2 - ow, y: top - len, width: ow * 2, height: len)
+        legFill.frame = CGRect(x: x - w / 2, y: top - len, width: w, height: len)
         fade(legEdgeL, palette.outline)
         fade(legEdgeR, palette.outline)
         fade(legFill, art.legColor ?? art.fur)

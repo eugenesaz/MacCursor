@@ -84,7 +84,7 @@ extension Skins {
             fur: rgb(0xFFFFFF),
             pads: shade, padColor: rgb(0xDADADA),
             nails: ink, nailColor: rgb(0x141414),
-            armWidth: 18, armTop: -76,
+            armWidth: 22, armTop: -76, armX: 5,
             stamp: print, stampOffsetY: -5,
             particle: .dot, particleColor: rgb(0x9E9E9E),
             legColor: rgb(0x8A8A8A))

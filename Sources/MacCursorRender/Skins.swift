@@ -16,6 +16,8 @@ public struct SkinArt {
     public var armWidth: CGFloat = 0
     /// Y where the leg attaches under the paw body.
     public var armTop: CGFloat = 0
+    /// X of the leg's centre line, for art whose wrist isn't under the tip.
+    public var armX: CGFloat = 0
     public var isRing = false
     /// Paw print left behind on click, centered at (0,0).
     public var stamp: CGPath? = nil

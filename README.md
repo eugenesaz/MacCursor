@@ -15,7 +15,7 @@ A free, open-source macOS menu bar app that makes your cursor impossible to miss
 - Hides the real system cursor, so you never see two pointers (optional; the ring keeps the arrow inside it). Uses a private macOS API, see below.
 - Follows the cursor at your display's refresh rate (up to 120 Hz), and uses almost no CPU when the mouse is still.
 - Shows up in full-screen shares and recordings.
-- Click feedback: a ripple and a paw-print stamp. Fast clicking adds bones (dog), hearts (cat) or dots. Moods: Subtle / Normal / Wild. Click sound (toggle).
+- Click feedback: a ripple and a paw-print stamp. Fast clicking adds bones (dog), hearts (cat) or dots. Moods: Subtle / Normal / Wild. Click sound: five soft sounds, a volume slider, and automatic softening when you click fast.
 - **Presentation mode** (prototype): clicks animate but never reach apps, and the keyboard keeps working.
 - Hotkeys: `⌃⌥P` toggles the pointer, `⌃⌥T` toggles presentation mode.
 

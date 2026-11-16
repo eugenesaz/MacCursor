@@ -124,7 +124,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func checkForUpdates() { updater?.checkForUpdates() }
 
-    @objc private func toggleSound() { settings.sound.toggle() }
+    @objc private func toggleSound() { settings.sound.isOn.toggle() }
+
+    @objc private func soundVolumeChanged(_ sender: NSSlider) {
+        settings.sound.volume = sender.doubleValue
+        controller.clickSound.preview(throttled: true)
+    }
+
+    @objc private func pickSound(_ sender: NSMenuItem) {
+        guard let raw = sender.representedObject as? String,
+            let kind = ClickSoundKind(rawValue: raw)
+        else { return }
+        settings.sound.kind = kind
+        controller.clickSound.preview()
+    }
+
+    @objc private func toggleQuieterWhenFast() { settings.sound.quieterWhenFast.toggle() }
+
+    @objc private func toggleSoundFollowsMood() { settings.sound.followsMood.toggle() }
 
     @objc private func toggleHideCursor() {
         pointer.hidesSystemCursor.toggle()
@@ -208,9 +225,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(.separator())
         menu.addItem(colorItem)
 
-        let sound = item("Click sound", #selector(toggleSound))
-        sound.state = settings.sound ? .on : .off
-        menu.addItem(sound)
+        menu.addItem(soundMenuItem())
         let hide = item("Hide system cursor", #selector(toggleHideCursor))
         hide.state = pointer.hidesSystemCursor ? .on : .off
         menu.addItem(hide)
@@ -227,6 +242,43 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             NSMenuItem(
                 title: "Quit MacCursor", action: #selector(NSApplication.terminate(_:)),
                 keyEquivalent: "q"))
+    }
+
+    /// "Click sound ▸": on/off, volume, which sound, and how it reacts.
+    private func soundMenuItem() -> NSMenuItem {
+        let sound = settings.sound
+        let sub = NSMenu()
+        let on = item("Play click sound", #selector(toggleSound))
+        on.state = sound.isOn ? .on : .off
+        sub.addItem(on)
+
+        sub.addItem(.separator())
+        sub.addItem(header("Volume"))
+        sub.addItem(
+            sliderItem(
+                value: sound.volume, range: SoundSettings.volumeRange,
+                action: #selector(soundVolumeChanged(_:)), label: "Click sound volume"))
+
+        sub.addItem(.separator())
+        sub.addItem(header("Sound"))
+        for kind in ClickSoundKind.allCases {
+            let i = item(kind.title, #selector(pickSound(_:)))
+            i.representedObject = kind.rawValue
+            i.state = sound.kind == kind ? .on : .off
+            sub.addItem(i)
+        }
+
+        sub.addItem(.separator())
+        let fast = item("Quieter when clicking fast", #selector(toggleQuieterWhenFast))
+        fast.state = sound.quieterWhenFast ? .on : .off
+        sub.addItem(fast)
+        let mood = item("Follow mood", #selector(toggleSoundFollowsMood))
+        mood.state = sound.followsMood ? .on : .off
+        sub.addItem(mood)
+
+        let parent = NSMenuItem(title: "Click sound", action: nil, keyEquivalent: "")
+        parent.submenu = sub
+        return parent
     }
 
     private func item(_ title: String, _ action: Selector, key: String = "") -> NSMenuItem {

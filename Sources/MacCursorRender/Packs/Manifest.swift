@@ -45,6 +45,8 @@ struct Manifest {
         var color: CGColor
         var coreColor: CGColor
         var join: CGPoint
+        /// Points from the join to the flame's tip; nil = as drawn.
+        var length: CGFloat?
     }
     var leg: Leg?
     var jet: Jet?
@@ -191,14 +193,17 @@ struct Manifest {
                 if let w, let j, let c { m.leg = Leg(width: w, join: j, color: c) }
             }
             if let jet = r.object(tail, "jet", "tail", required: false) {
-                r.allow(jet, "tail.jet", ["flame", "core", "color", "coreColor", "join"])
+                r.allow(jet, "tail.jet", ["flame", "core", "color", "coreColor", "join", "length"])
                 let flame = r.art(jet, "flame", "tail.jet")
                 let core = r.art(jet, "core", "tail.jet")
                 let c = r.color(jet, "color", "tail.jet")
                 let cc = r.color(jet, "coreColor", "tail.jet")
                 let j = r.point(jet, "join", "tail.jet")
+                let length = r.number(
+                    jet, "length", "tail.jet", 1...PointerRig.legLength, required: false)
                 if let flame, let core, let c, let cc, let j {
-                    m.jet = Jet(flame: flame, core: core, color: c, coreColor: cc, join: j)
+                    m.jet = Jet(
+                        flame: flame, core: core, color: c, coreColor: cc, join: j, length: length)
                 }
             }
             if tail["leg"] == nil && tail["jet"] == nil {

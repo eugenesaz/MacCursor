@@ -71,7 +71,7 @@ Either a leg:
 Or a jet flame:
 
 ```json
-"tail": { "jet": { "flame": "flame", "core": "core", "color": "#FF7A1AE6", "coreColor": "#FFE08A", "join": [40, 52] } }
+"tail": { "jet": { "flame": "flame", "core": "core", "color": "#FF7A1AE6", "coreColor": "#FFE08A", "join": [40, 52], "length": 560 } }
 ```
 
 | Key | Meaning |
@@ -79,6 +79,7 @@ Or a jet flame:
 | `flame`, `core` | Art ids. Draw them in place, pointing down from `join`. The core is drawn over the flame. |
 | `color`, `coreColor` | Their fills. |
 | `join` | Where the flame attaches. It flickers lengthwise about this point, and the Tail slider shortens it toward this point while keeping its width. The jet is drawn behind the body, so let the flame start a little inside it. |
+| `length` | Optional, 1–560 points: how far the flame reaches from `join` with the Tail slider at full. The flame and core are stretched lengthwise to fit, keeping their width, so a short drawing can reach off-screen like a leg (legs are 560 points). Left out: as drawn. |
 
 ### click
 

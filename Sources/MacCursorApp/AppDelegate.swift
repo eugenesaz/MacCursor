@@ -153,7 +153,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func toggleDraw() {
         settings.draw.isOn.toggle()
-        if !settings.draw.isOn { controller.clearInk() }
+        controller.updateInk()
+    }
+
+    @objc private func allowDrawing() {
+        _ = PresentationMode.hasAccessibility(prompt: true)
+        NSWorkspace.shared.open(
+            URL(
+                string:
+                    "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
+            )!)
     }
 
     @objc private func clearDrawing() { controller.clearInk() }
@@ -324,7 +333,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let on = item("Draw on screen", #selector(toggleDraw))
         on.state = draw.isOn ? .on : .off
         sub.addItem(on)
-        for hint in ["Hold ⌘ and move: the line fades", "Hold ⌘⌥ and move: the line stays"] {
+        if draw.isOn && pointer.isEnabled && !controller.ink.isReady {
+            sub.addItem(item("Allow Drawing in Accessibility Settings…", #selector(allowDrawing)))
+        }
+        for hint in ["Hold ⌘ and drag: the line fades", "Hold ⌘⌥ and drag: the line stays"] {
             let i = NSMenuItem(title: hint, action: nil, keyEquivalent: "")
             i.isEnabled = false
             i.indentationLevel = 1

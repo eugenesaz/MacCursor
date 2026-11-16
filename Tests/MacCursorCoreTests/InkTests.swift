@@ -61,13 +61,7 @@ import Testing
     }
 }
 
-@Suite struct InkTriggerTests {
-    /// Feeds polled states (keys, mouse button down, key-press counter) and returns each result.
-    func run(_ steps: [(HeldKeys, Bool, UInt32)]) -> [InkMode?] {
-        var t = InkTrigger()
-        return steps.map { t.update(keys: $0.0, buttonDown: $0.1, keyDownCount: $0.2) }
-    }
-
+@Suite struct InkGestureTests {
     static let cases: [(HeldKeys, InkMode?)] = [
         ([], nil),
         ([.command], .fading),
@@ -81,36 +75,51 @@ import Testing
 
     @Test(arguments: cases)
     func modeFollowsTheHeldKeys(keys: HeldKeys, expected: InkMode?) {
-        #expect(run([(keys, false, 0)]) == [expected])
+        #expect(InkMode(keys: keys) == expected)
     }
 
-    @Test func switchingOptionMidHoldSwitchesTheMode() {
-        let r = run([
-            ([.command], false, 5), ([.command, .option], false, 5), ([.command], false, 5),
-        ])
-        #expect(r == [.fading, .lasting, .fading])
+    @Test func movingWithoutAPressNeverDraws() {
+        var g = InkGesture()
+        let mode = g.drag(keys: [.command])
+        let ended = g.up()
+        #expect(mode == nil)
+        #expect(!ended)
+        #expect(!g.isActive)
     }
 
-    @Test func typingDuringTheHoldStopsDrawingUntilCommandIsReleased() {
-        let r = run([
-            ([.command], false, 5), ([.command], false, 6), ([.command, .option], false, 6),
-            ([], false, 6), ([.command], false, 6),
-        ])
-        #expect(r == [.fading, nil, nil, nil, .fading])
+    @Test func aPressWithoutTheKeysIsNotClaimed() {
+        var g = InkGesture()
+        let mode = g.down(keys: [])
+        let dragged = g.drag(keys: [.command])
+        let ended = g.up()
+        #expect(mode == nil && dragged == nil && !ended)
     }
 
-    @Test func clickingDuringTheHoldStopsDrawingUntilCommandIsReleased() {
-        let r = run([
-            ([.command], true, 0), ([.command], false, 0), ([], false, 0), ([.command], false, 0),
-        ])
-        #expect(r == [nil, nil, nil, .fading])
+    @Test func aDrawingPressDrawsUntilReleased() {
+        var g = InkGesture()
+        let start = g.down(keys: [.command])
+        #expect(g.isActive)
+        let modes = [
+            g.drag(keys: [.command]), g.drag(keys: [.command, .option]), g.drag(keys: [.command]),
+        ]
+        let ended = g.up()
+        #expect(start == .fading)
+        #expect(modes == [.fading, .lasting, .fading])
+        #expect(ended && !g.isActive)
+        let after = g.drag(keys: [.command])
+        #expect(after == nil)
     }
 
-    @Test func aShortcutHeldWithOtherModifiersAlsoSpoilsTheHold() {
-        let r = run([
-            ([.command, .shift], false, 1), ([.command, .shift], false, 2), ([.command], false, 2),
-        ])
-        #expect(r == [nil, nil, nil])
+    @Test func lettingGoOfCommandStopsDrawingButKeepsThePressClaimed() {
+        var g = InkGesture()
+        _ = g.down(keys: [.command, .option])
+        let modes = [g.drag(keys: [.option]), g.drag(keys: [.command, .option])]
+        #expect(modes == [nil, nil])
+        #expect(g.isActive)
+        let ended = g.up()
+        #expect(ended)
+        let again = g.down(keys: [.command])
+        #expect(again == .fading)
     }
 }
 

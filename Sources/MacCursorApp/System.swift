@@ -51,6 +51,8 @@ final class PresentationMode {
     private var tap: CFMachPort?
     private var source: CFRunLoopSource?
     var onClick: (() -> Void)?
+    /// Presses (and their releases) that something else handles, e.g. drawing.
+    var passThrough: ((CGEventType, CGEvent) -> Bool)?
     var isOn: Bool { tap != nil }
 
     static func hasAccessibility(prompt: Bool) -> Bool {
@@ -79,6 +81,10 @@ final class PresentationMode {
                 eventsOfInterest: mask,
                 callback: { _, type, event, refcon in
                     let pm = Unmanaged<PresentationMode>.fromOpaque(refcon!).takeUnretainedValue()
+                    // The tap runs on the main run loop.
+                    if MainActor.assumeIsolated({ pm.passThrough?(type, event) ?? false }) {
+                        return Unmanaged.passUnretained(event)
+                    }
                     switch type {
                     case .tapDisabledByTimeout, .tapDisabledByUserInput:
                         if let t = pm.tap { CGEvent.tapEnable(tap: t, enable: true) }

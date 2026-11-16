@@ -3,6 +3,16 @@
 Notes for each release, written for people using MacCursor. The newest version is at the top.
 The section for a version is what the update dialog shows.
 
+## [Unreleased]
+
+- **Draw on screen** to point things out while presenting:
+  - hold **⌘** and move the mouse to draw a line that fades away after a few seconds;
+  - hold **⌘⌥** for a line that stays until you clear it with **⌃⌥X**.
+  - Nothing underneath is clicked, and no extra permission is needed. Typing a shortcut or
+    clicking while ⌘ is down doesn't draw, so ⌘C, ⌘-Tab and ⌘-click work as before.
+- A new **Draw** menu: eight ink colors (**⌃⌥C** switches to the next), three thicknesses,
+  how long fading lines stay (1–10 s), and an off switch.
+
 ## [0.3.2] - 2026-11-16
 
 - MacCursor has an app icon in Finder, the Applications folder and the Dock.

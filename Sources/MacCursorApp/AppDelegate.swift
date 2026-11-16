@@ -33,6 +33,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             [weak self] in
             self?.togglePresentation()
         }
+        HotKeys.shared.register(id: 3, keyCode: kVK_ANSI_X, modifiers: controlKey | optionKey) {
+            [weak self] in
+            self?.clearDrawing()
+        }
+        HotKeys.shared.register(id: 4, keyCode: kVK_ANSI_C, modifiers: controlKey | optionKey) {
+            [weak self] in
+            self?.nextInkColor()
+        }
         StyleStore.shared.onChange = { [weak self] in self?.controller.refreshStyle() }
         StyleStore.shared.start()
         pointer.setEnabled(true)
@@ -143,6 +151,32 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func toggleSoundFollowsMood() { settings.sound.followsMood.toggle() }
 
+    @objc private func toggleDraw() {
+        settings.draw.isOn.toggle()
+        if !settings.draw.isOn { controller.clearInk() }
+    }
+
+    @objc private func clearDrawing() { controller.clearInk() }
+
+    @objc private func nextInkColor() { settings.draw.color = settings.draw.color.next }
+
+    @objc private func pickInkColor(_ sender: NSMenuItem) {
+        guard let raw = sender.representedObject as? String, let c = InkColor(rawValue: raw)
+        else { return }
+        settings.draw.color = c
+    }
+
+    @objc private func pickInkWidth(_ sender: NSMenuItem) {
+        guard let raw = sender.representedObject as? String, let w = InkWidth(rawValue: raw)
+        else { return }
+        settings.draw.width = w
+    }
+
+    @objc private func pickFade(_ sender: NSMenuItem) {
+        guard let seconds = sender.representedObject as? Double else { return }
+        settings.draw.fadeSeconds = seconds
+    }
+
     @objc private func toggleHideCursor() {
         pointer.hidesSystemCursor.toggle()
     }
@@ -227,6 +261,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(colorItem)
 
         menu.addItem(soundMenuItem())
+        menu.addItem(drawMenuItem())
         let hide = item("Hide system cursor", #selector(toggleHideCursor))
         hide.state = pointer.hidesSystemCursor ? .on : .off
         menu.addItem(hide)
@@ -280,6 +315,69 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let parent = NSMenuItem(title: "Click sound", action: nil, keyEquivalent: "")
         parent.submenu = sub
         return parent
+    }
+
+    /// "Draw ▸": on/off, how to draw, clear, color, thickness and fade time.
+    private func drawMenuItem() -> NSMenuItem {
+        let draw = settings.draw
+        let sub = NSMenu()
+        let on = item("Draw on screen", #selector(toggleDraw))
+        on.state = draw.isOn ? .on : .off
+        sub.addItem(on)
+        for hint in ["Hold ⌘ and move: the line fades", "Hold ⌘⌥ and move: the line stays"] {
+            let i = NSMenuItem(title: hint, action: nil, keyEquivalent: "")
+            i.isEnabled = false
+            i.indentationLevel = 1
+            sub.addItem(i)
+        }
+        sub.addItem(item("Clear drawing", #selector(clearDrawing), key: "x"))
+        sub.addItem(item("Next color", #selector(nextInkColor), key: "c"))
+
+        sub.addItem(.separator())
+        sub.addItem(header("Color"))
+        for color in InkColor.allCases {
+            let i = item(color.title, #selector(pickInkColor(_:)))
+            i.representedObject = color.rawValue
+            i.state = draw.color == color ? .on : .off
+            i.image = swatch(color)
+            sub.addItem(i)
+        }
+
+        sub.addItem(.separator())
+        sub.addItem(header("Thickness"))
+        for width in InkWidth.allCases {
+            let i = item(width.title, #selector(pickInkWidth(_:)))
+            i.representedObject = width.rawValue
+            i.state = draw.width == width ? .on : .off
+            sub.addItem(i)
+        }
+
+        sub.addItem(.separator())
+        sub.addItem(header("Fading lines disappear after"))
+        for seconds in DrawSettings.fadeChoices {
+            let i = item("\(Int(seconds)) s", #selector(pickFade(_:)))
+            i.representedObject = seconds
+            i.state = draw.fadeSeconds == seconds ? .on : .off
+            sub.addItem(i)
+        }
+
+        let parent = NSMenuItem(title: "Draw", action: nil, keyEquivalent: "")
+        parent.submenu = sub
+        return parent
+    }
+
+    /// A filled circle of the ink color, outlined so white and black show on any menu.
+    private func swatch(_ color: InkColor) -> NSImage {
+        let c = color.rgb
+        return NSImage(size: NSSize(width: 12, height: 12), flipped: false) { rect in
+            let dot = NSBezierPath(ovalIn: rect.insetBy(dx: 1, dy: 1))
+            NSColor(srgbRed: c.red, green: c.green, blue: c.blue, alpha: 1).setFill()
+            dot.fill()
+            NSColor.gray.setStroke()
+            dot.lineWidth = 0.5
+            dot.stroke()
+            return true
+        }
     }
 
     private func item(_ title: String, _ action: Selector, key: String = "") -> NSMenuItem {

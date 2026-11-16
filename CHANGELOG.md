@@ -3,6 +3,12 @@
 Notes for each release, written for people using MacCursor. The newest version is at the top.
 The section for a version is what the update dialog shows.
 
+## [0.1.1] - 2026-11-16
+
+- The cartoon hand is redrawn as a classic cartoon glove: a pointing finger, a broad thumb,
+  knuckles on the right, stitch lines and a rolled cuff.
+- The cartoon hand's sleeve now comes straight out of the middle of the cuff.
+
 ## [0.1.0] - 2026-11-16
 
 - First release. Your pointer becomes a dog paw, cat paw, cartoon hand or highlight ring that's

@@ -23,6 +23,8 @@ public struct SkinArt {
     public var stampOffsetY: CGFloat = 0
     public var particle: ParticleKind = .dot
     public var particleColor: CGColor = rgb(0xFFD23F)
+    /// Fill of the leg or arm; nil means the same as `fur`.
+    public var legColor: CGColor? = nil
 }
 
 /// Colors that depend on what's behind the pointer.

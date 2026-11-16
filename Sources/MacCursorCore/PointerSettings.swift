@@ -14,7 +14,7 @@ public enum PointerStyle: String, CaseIterable, Sendable {
         switch self {
         case .dogPaw: return "Dog paw"
         case .catPaw: return "Cat paw"
-        case .finger: return "Pointing finger"
+        case .finger: return "Cartoon hand"
         case .ring: return "Highlight ring"
         }
     }

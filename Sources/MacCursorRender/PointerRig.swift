@@ -78,7 +78,7 @@ public final class PointerRig {
         legFill.frame = CGRect(x: -w / 2, y: top - len, width: w, height: len)
         fade(legEdgeL, palette.outline)
         fade(legEdgeR, palette.outline)
-        fade(legFill, art.fur)
+        fade(legFill, art.legColor ?? art.fur)
     }
 
     private func fade(_ g: CAGradientLayer, _ c: CGColor) {

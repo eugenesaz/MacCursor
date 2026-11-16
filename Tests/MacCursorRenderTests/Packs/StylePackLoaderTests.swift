@@ -111,6 +111,38 @@ enum PackFixture {
         #expect(abs(box.maxY) < 0.001 && abs(box.minY + 40) < 0.001)
     }
 
+    @Test func jetLengthStretchesFlameAndCoreLengthwiseOnly() throws {
+        let l = PackFixture.load {
+            $0["tail"] = [
+                "jet": [
+                    "flame": "flame", "core": "core", "color": "#3D55E0CC",
+                    "coreColor": "#BFD0FF", "join": [50, 50], "length": 560,
+                ]
+            ]
+        }
+        #expect(l.problems.isEmpty, "\(messages(l))")
+        let jet = try #require(l.pack?.jet)
+        // The flame's art is 40 long, so everything stretches 14× lengthwise.
+        let flame = jet.flame.boundingBoxOfPath
+        #expect(abs(flame.minY + 560) < 0.001 && abs(flame.width - 10) < 0.001)
+        let core = jet.core.boundingBoxOfPath
+        #expect(abs(core.minY + 280) < 0.001 && abs(core.width - 4) < 0.001)
+    }
+
+    @Test func jetLengthMustBeInRange() {
+        let l = PackFixture.load {
+            $0["tail"] = [
+                "jet": [
+                    "flame": "flame", "core": "core", "color": "#3D55E0CC",
+                    "coreColor": "#BFD0FF", "join": [50, 50], "length": 600,
+                ]
+            ]
+        }
+        #expect(
+            messages(l).contains(
+                "style.json: \"tail.jet.length\" must be a number from 1 to 560 (got 600)"))
+    }
+
     @Test func dotParticlesAreBuiltInAndNotOutlined() throws {
         let l = PackFixture.load { $0["click"] = ["particles": ["art": "dot", "color": "#FFF"]] }
         let p = try #require(l.pack?.click.particles)

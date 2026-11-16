@@ -146,9 +146,18 @@ public enum StylePackLoader {
         }
         if let jet = m.jet {
             let join = point(jet.join)
-            if let flame = path(jet.flame, relativeTo: join),
-                let core = path(jet.core, relativeTo: join)
+            if var flame = path(jet.flame, relativeTo: join),
+                var core = path(jet.core, relativeTo: join)
             {
+                // Stretch lengthwise so the flame's tip is `length` from the join. Art stays
+                // within 200 pt; this lets a flame reach as far as a leg.
+                let box = flame.boundingBoxOfPath
+                let drawn = max(abs(box.minY), abs(box.maxY))
+                if let length = jet.length, drawn > 0 {
+                    var t = CGAffineTransform(scaleX: 1, y: length / drawn)
+                    flame = flame.copy(using: &t) ?? flame
+                    core = core.copy(using: &t) ?? core
+                }
                 tail = .jet(
                     StylePack.Jet(
                         flame: flame, core: core, color: color(jet.color, m.dark.jet),

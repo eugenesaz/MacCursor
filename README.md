@@ -19,17 +19,26 @@ A free, open-source macOS menu bar app that makes your cursor impossible to miss
 - **Presentation mode** (prototype): clicks animate but never reach apps, and the keyboard keeps working.
 - Hotkeys: `⌃⌥P` toggles the pointer, `⌃⌥T` toggles presentation mode.
 
-## Requirements
+## Install
 
-macOS 26 or later.
+1. Download `MacCursor-X.Y.Z.zip` from the [latest release](https://github.com/eugenesaz/MacCursor/releases/latest) and open it.
+2. Move **MacCursor** to `Applications` (or `~/Applications` in your home folder, which lets updates install without an admin password).
+3. Open it. macOS says it can't check the app for malware, because MacCursor is free and isn't notarized by Apple (that needs a paid developer account). Go to **System Settings › Privacy & Security**, scroll down and click **Open Anyway**. You only do this once.
 
-## Build & run
+Requires macOS 26 or later.
+
+### Updates
+
+MacCursor checks for a new version once a day and asks before installing it. You can also choose **Check for Updates…** in the menu. Updates are signed, and MacCursor only installs ones signed with the project's key.
+
+## Build from source
 
 Needs the Xcode Command Line Tools (`xcode-select --install`).
 
 ```sh
+./scripts/make-signing-identity.sh  # once: a local signing identity, so permissions survive rebuilds
 ./scripts/check.sh                  # format lint, build, all tests
-./scripts/bundle.sh                 # → build/MacCursor.app (ad-hoc signed)
+./scripts/bundle.sh                 # → build/MacCursor.app (CODESIGN_IDENTITY=- for ad-hoc)
 open build/MacCursor.app            # paw icon appears in the menu bar
 ```
 
@@ -43,7 +52,7 @@ The scripts use bash and apply a workaround for a known broken Command Line Tool
 
 ### Permissions
 - **None** for the pointer and click effects.
-- **Accessibility** only for presentation mode, which blocks clicks. Each local rebuild changes the ad-hoc signature, so you may need to remove the app from and re-add it to System Settings → Privacy & Security → Accessibility.
+- **Accessibility** only for presentation mode, which blocks clicks. With the local signing identity, the permission survives rebuilds; an ad-hoc build needs it granted again.
 
 ### About the private API
 macOS doesn't let a background app hide the system cursor. MacCursor registers a blank cursor through the private SkyLight framework instead (technique credit: [Cursorlight](https://github.com/Zawalid/Cursorlight), MIT). If a future macOS removes it, MacCursor keeps working and the arrow simply stays visible. You can also turn it off: **Hide system cursor** in the menu.
@@ -58,6 +67,8 @@ macOS doesn't let a background app hide the system cursor. MacCursor registers a
 | `Tests/` | swift-testing unit tests and snapshot tests (reference PNGs in `Tests/MacCursorRenderTests/Snapshots/`) |
 | `docs/manual-test.md` | What to check by hand before merging and releasing |
 
+Releases: see [docs/releasing.md](docs/releasing.md).
+
 ## License
 
-TBD (MIT planned).
+[MIT](LICENSE). Third-party notices: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

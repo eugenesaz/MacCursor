@@ -14,6 +14,9 @@ public enum InkMode: Sendable {
         default: return nil
         }
     }
+
+    /// A right-click with the drawing keys held (exactly ⌘ or ⌘⌥) clears all ink.
+    public static func rightClickClears(keys: HeldKeys) -> Bool { InkMode(keys: keys) != nil }
 }
 
 /// The modifier keys that matter for drawing.

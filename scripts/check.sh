@@ -14,7 +14,7 @@ step "swift: test";        scripts/swift-test.sh
 step "style packs: validate"
 BIN="$(swift build --show-bin-path)/MacCursor"
 "$BIN" --validate --builtin Resources/Styles/*
-"$BIN" --validate Tests/MacCursorRenderTests/Fixtures/Packs/rocket
+"$BIN" --validate Tests/MacCursorRenderTests/Fixtures/Packs/rocket docs/style-template
 if "$BIN" --validate Tests/MacCursorRenderTests/Fixtures/Packs/broken 2>/dev/null; then
   echo "the broken fixture pack passed validation" >&2; exit 1
 fi

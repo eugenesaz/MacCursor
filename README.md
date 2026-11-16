@@ -9,7 +9,7 @@ A free, open-source macOS menu bar app that makes your cursor impossible to miss
 ## Features
 
 - Click-through overlay on every display. Clicking, dragging, scrolling and selecting work as normal.
-- Styles: **Dog paw**, **Cat paw**, **Pointing finger**, **Highlight ring** (original art, drawn in code)
+- Styles: **Dog paw**, **Cat paw**, **Cartoon hand**, **Highlight ring** (original art), and any style you import or make yourself (see [Styles](#styles))
 - **Size** slider in the menu (0.4× to 1.6×, applied live)
 - **Light / Dark / Auto** colors. Auto follows the system appearance: a dark outline on light screens, a light "sticker" outline on dark screens.
 - Hides the real system cursor, so you never see two pointers (optional; the ring keeps the arrow inside it). Uses a private macOS API, see below.
@@ -30,6 +30,20 @@ Requires macOS 26 or later.
 ### Updates
 
 MacCursor checks for a new version once a day and asks before installing it. You can also choose **Check for Updates…** in the menu. Updates are signed, and MacCursor only installs ones signed with the project's key.
+
+## Styles
+
+Get a style from a friend or online as a `.maccursorstyle` file, then choose **Import Style…** in
+MacCursor's menu. You see a preview first; the style is selected as soon as it's imported.
+**Remove Style…** moves one to the Trash.
+
+**Make your own:** draw it in any vector editor (Figma, Inkscape, Illustrator, Affinity) and
+follow [Making a style](docs/making-a-style.md). A style is just an SVG and a short `style.json`,
+and MacCursor redraws it live each time you save. The format: [docs/style-packs.md](docs/style-packs.md).
+Licence rules for sharing: [CONTRIBUTING.md](CONTRIBUTING.md).
+
+A style is pictures only: it can't run code or load anything from the internet, and MacCursor
+checks every file before using it.
 
 ## Build from source
 
@@ -62,8 +76,9 @@ macOS doesn't let a background app hide the system cursor. MacCursor registers a
 | Path | What |
 |---|---|
 | `Sources/MacCursorCore/` | Pure logic, fully unit-tested: settings, display geometry, cursor policy |
-| `Sources/MacCursorRender/` | Pointer art (paths, palettes), the pointer layers and click effects, the snapshot renderer |
-| `Sources/MacCursorApp/` | The menu bar app: overlay windows, tracking, cursor hiding, hotkeys, presentation mode |
+| `Sources/MacCursorRender/` | Style packs (SVG and manifest reader, pack files, library), the pointer layers and click effects, the snapshot renderer |
+| `Resources/Styles/` | The built-in styles, as style packs |
+| `Sources/MacCursorApp/` | The menu bar app: overlay windows, tracking, cursor hiding, hotkeys, presentation mode, style import, command-line tools |
 | `Tests/` | swift-testing unit tests and snapshot tests (reference PNGs in `Tests/MacCursorRenderTests/Snapshots/`) |
 | `docs/manual-test.md` | What to check by hand before merging and releasing |
 

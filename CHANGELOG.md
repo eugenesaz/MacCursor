@@ -3,6 +3,17 @@
 Notes for each release, written for people using MacCursor. The newest version is at the top.
 The section for a version is what the update dialog shows.
 
+## [Unreleased]
+
+- **Styles you can add yourself.** Choose **Import Style…** in the menu to add a style someone
+  sent you as a `.maccursorstyle` file. You see a preview first, and **Remove Style…** takes it
+  out again.
+- **Make your own style** in any vector editor, with no coding: an SVG drawing and a short
+  settings file. MacCursor shows your changes live each time you save. See "Making a style" in
+  the docs.
+- The built-in styles are now made the same way. They look exactly as before, and your chosen
+  style is kept.
+
 ## [0.1.2] - 2026-11-16
 
 - New **Tail** slider in the menu, under Size: shorten the paw's leg or the hand's sleeve, or

@@ -80,7 +80,7 @@ tail, as a PNG (the same images the snapshot tests compare).
 |---|---|---|
 | 1 | check.sh passes | `./scripts/check.sh` |
 | 2 | Arrow never visible; back on toggle-off and quit | H1–H15 |
-| 3 | Tip within 1 pt of the click point | `DisplayLayoutTests`, `StyleCatalogTests`, D2 |
+| 3 | Tip within 1 pt of the click point | `DisplayLayoutTests`, `BuiltinStyleTests`, D2 |
 | 4 | No visible lag at 120 Hz | T1, T2 |
 | 5 | Display changes rebuild within 1 s | D3, D4 |
 | 6 | 4 styles × 2 palettes render | `SnapshotTests`, L6 |
@@ -99,6 +99,43 @@ Tail length (`SPEC-tail-length.md`, #15):
 | 4 | Live change, kept after relaunch, far left none, far right full | L7, L8 |
 | 5 | Kept across a switch to the ring and back | L9 |
 | 6 | No change in CPU | T3, T4 |
+
+## Style packs (`SPEC-skins.md`, #9)
+
+Use the rocket test pack (`Tests/MacCursorRenderTests/Fixtures/Packs/rocket`) and the template
+(`docs/style-template`). `MC=build/MacCursor.app/Contents/MacOS/MacCursor`.
+
+| # | Do | Expect |
+|---|---|---|
+| P1 | Update from v0.1.2 with each built-in style selected in turn | The same style is selected after the update, and looks the same |
+| P2 | **Open Styles Folder** | Finder opens `~/Library/Application Support/MacCursor/Styles/` (created if missing) |
+| P3 | Copy the rocket folder into it | **Rocket** appears in the Style menu after a separator within 2 s, without relaunching |
+| P4 | Select Rocket; change `body.color` in its `style.json` and save | The pointer's colour changes within 2 s |
+| P5 | Break it: delete a closing `}` and save | The pointer shows the dog paw; the menu shows **1 style couldn't load…**; clicking it lists the JSON problem, copyable |
+| P6 | Fix it and save | Rocket comes back and is selected again, without picking it |
+| P7 | Rocket selected: drag the Tail slider; click slowly, then fast | The flame shortens to nothing at the far left and flickers; every click fires 8 darts from the centre, pointing outward; fast clicks fire more |
+| P8 | Delete the rocket folder | It leaves the menu; the pointer shows the dog paw |
+| P9 | `$MC --pack docs/style-template`, download it again through Safari (so it's quarantined), **Import Style…** it | A preview with name, author, licence and version; **Import** selects it |
+| P10 | Import the same file again | The dialog says **Replace "My style" 1.0.0 with My style 1.0.0?** |
+| P11 | Import a `.maccursorstyle` that is really a renamed PNG; then one of the built-ins packed with `--pack --builtin` | A "couldn't import" alert listing the problem; a "can't import" alert about the built-in id. Nothing is written to the Styles folder |
+| P12 | **Remove Style…**, pick the template's style | Its folder is in the Trash; the pointer goes back to the dog paw |
+| P13 | With 3–4 user styles installed, watch Activity Monitor while idle and moving | CPU is the same as with only built-ins (T3, T4) |
+
+Style packs (`SPEC-skins.md`, #9) criteria:
+
+| # | Criterion | Checked by |
+|---|---|---|
+| 1 | check.sh passes; old snapshots unchanged, now from packs | `./scripts/check.sh`, `SnapshotTests` |
+| 2 | Built-ins are packs that pass `--validate` | `check.sh` (style packs: validate), `BuiltinStyleTests` |
+| 3 | Saved style kept after updating | `PointerSettingsTests.oldStyleIDsCarryOver`, P1 |
+| 4 | New pack appears and edits redraw within 2 s | P3, P4 |
+| 5 | Broken packs rejected with clear messages, no crash | `StylePackLoaderTests`, `SVGArtTests`, `StyleLibraryTests`, P5 |
+| 6 | Every #9 engine feature | `EngineFeatureTests`, rocket snapshots, P7 |
+| 7 | `--validate`, `--pack`, `--preview` | `check.sh` (style packs steps) |
+| 8 | Loading off the main thread; CPU unchanged | `StyleStore.reload`, P13 |
+| 8a | Import installs and selects after one confirmation; bad files write nothing | `PackArchiveTests`, `PackInstallTests`, P9–P11 |
+| 8b | The guide alone gets a pack from template to file | Making the rocket fixture from `docs/making-a-style.md` |
+| 9 | Docs let someone make a pack without reading code | `docs/making-a-style.md`, `docs/style-packs.md` |
 
 ## Updates
 

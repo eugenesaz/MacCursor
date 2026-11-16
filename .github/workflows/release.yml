@@ -57,6 +57,11 @@ jobs:
           CODESIGN_IDENTITY: MacCursor Release
         run: ./scripts/release.sh "${GITHUB_REF_NAME#v}"
 
+      - name: Pack the starter style template
+        run: |
+          bin="$(swift build -c release --show-bin-path)/MacCursor"
+          "$bin" --pack docs/style-template -o build/style-template.maccursorstyle
+
       - name: Write the update feed (appcast.xml)
         env:
           SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
@@ -75,5 +80,5 @@ jobs:
           version="${GITHUB_REF_NAME#v}"
           gh release create "$GITHUB_REF_NAME" \
             "build/MacCursor-$version.zip" "build/MacCursor-$version.zip.sha256" \
-            build/appcast.xml \
+            build/appcast.xml build/style-template.maccursorstyle \
             --title "MacCursor $version" --notes-file build/notes.md

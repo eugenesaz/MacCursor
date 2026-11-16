@@ -32,6 +32,7 @@ Needs a second display.
 |---|---|---|
 | D0 | Without Accessibility granted, open the Draw menu and choose Allow Drawing…; grant it | System Settings opens; within 2 s drawing works, no relaunch |
 | D1 | Hold ⌘ and drag in a circle, then let go | A smooth red line follows the pointer's tip, under the pointer; about 3 s after letting go it fades out |
+| D1a | During D1, watch the pointer; let go and wait without moving | The pointer stays on the line's tip the whole time and doesn't jump back after release |
 | D2 | Hold ⌘⌥ and drag, wait 10 s | The line stays |
 | D3 | Press ⌃⌥X (or Draw ▸ Clear drawing) | Every line is gone, on every display |
 | D4 | While dragging with ⌘, press and release ⌥ | The line switches between fading and lasting at that point |

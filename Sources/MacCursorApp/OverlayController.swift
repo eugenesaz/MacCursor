@@ -300,11 +300,14 @@ final class OverlayController {
         log("overlays: \(overlays.count) display(s)")
     }
 
+    /// The mouse position the pointer follows (AppKit global coordinates).
+    var mouseLocation: CGPoint { ink.drawingPosition ?? NSEvent.mouseLocation }
+
     /// Pointer scale: the size setting (the mood no longer scales the pointer).
     private var scale: CGFloat { CGFloat(settings.pointer.size) }
 
     private func watchMouse() {
-        let mouse = NSEvent.mouseLocation
+        let mouse = mouseLocation
         guard mouse != lastWatchedMouse else { return }
         lastWatchedMouse = mouse
         wakeOverlays()
@@ -363,7 +366,7 @@ final class OverlayController {
         let squash =
             pack.overlay
             ? 0 : t < 0.2 ? CGFloat(sin(.pi * t / 0.2)) * min(1, 0.6 + 0.2 * lastIntensity) : 0
-        let mouse = NSEvent.mouseLocation
+        let mouse = mouseLocation
         overlay.update(
             mouse: mouse, active: overlay === activeOverlay(for: mouse), now: now,
             scale: scale, squash: squash)
@@ -379,7 +382,7 @@ final class OverlayController {
         let mood = settings.mood
         // Faster clicking → bigger reaction.
         lastIntensity = min(1 + CGFloat(clickTimes.count - 1) * 0.55, 3.2) * CGFloat(mood.intensity)
-        let mouse = NSEvent.mouseLocation
+        let mouse = mouseLocation
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         activeOverlay(for: mouse)?

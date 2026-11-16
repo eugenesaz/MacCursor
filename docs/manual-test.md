@@ -84,3 +84,12 @@ writes every style × palette × size as a PNG (the same images the snapshot tes
 | 8 | Auto color switches within 1 s | `PointerSettingsTests`, L4 |
 | 9 | CPU under 1% idle, 10% moving | T3, T4 |
 | 10 | Visible in a full-screen share | S1, S2 |
+
+## Updates
+
+| # | Do | Expect |
+|---|---|---|
+| U1 | Local build: open the menu | **Version 0.1.0** and **Check for Updates…** above Quit; no update dialog appears by itself |
+| U2 | Ad-hoc build (`CODESIGN_IDENTITY=- ./scripts/bundle.sh`) | Launches; pointer, cursor hiding and presentation mode work under the hardened runtime |
+| U3 | End to end, before announcing a release (`SPEC-updates.md`): install vX.Y.Z from GitHub in `~/Applications`, publish vX.Y.Z+1, **Check for Updates…** | Shows the new notes, installs, relaunches as the new version; no second **Open Anyway**; Accessibility still granted; the arrow never stays hidden during the swap |
+| U4 | With the older version installed again: `defaults write io.github.eugenesaz.maccursor SULastCheckTime -date "2020-01-01 00:00:00 +0000"`, relaunch | The update dialog appears by itself within a minute |

@@ -55,7 +55,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc private func pickSkin(_ sender: NSMenuItem) {
-        settings.skin = SkinKind(rawValue: sender.representedObject as! String)!
+        settings.pointer.style = PointerStyle(rawValue: sender.representedObject as! String)!
         controller.refreshStyle()
     }
 
@@ -64,14 +64,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc private func pickColor(_ sender: NSMenuItem) {
-        settings.colorMode = ColorMode(rawValue: sender.representedObject as! String)!
+        settings.pointer.colorMode = ColorMode(rawValue: sender.representedObject as! String)!
         controller.refreshStyle()
     }
 
     @objc private func toggleSound() { settings.sound.toggle() }
 
     @objc private func toggleHideCursor() {
-        settings.hideSystemCursor.toggle()
+        settings.pointer.hidesSystemCursor.toggle()
         controller.updateCursorVisibility()
     }
 
@@ -98,10 +98,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         menu.addItem(.separator())
         menu.addItem(header("Style"))
-        for kind in SkinKind.allCases {
+        for kind in PointerStyle.allCases {
             let i = item(kind.title, #selector(pickSkin(_:)))
             i.representedObject = kind.rawValue
-            i.state = settings.skin == kind ? .on : .off
+            i.state = settings.pointer.style == kind ? .on : .off
             menu.addItem(i)
         }
 
@@ -118,7 +118,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         for mode in ColorMode.allCases {
             let i = item(mode.title, #selector(pickColor(_:)))
             i.representedObject = mode.rawValue
-            i.state = settings.colorMode == mode ? .on : .off
+            i.state = settings.pointer.colorMode == mode ? .on : .off
             colorMenu.addItem(i)
         }
         colorItem.submenu = colorMenu
@@ -129,7 +129,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         sound.state = settings.sound ? .on : .off
         menu.addItem(sound)
         let hide = item("Hide system cursor", #selector(toggleHideCursor))
-        hide.state = settings.hideSystemCursor ? .on : .off
+        hide.state = settings.pointer.hidesSystemCursor ? .on : .off
         menu.addItem(hide)
 
         menu.addItem(.separator())

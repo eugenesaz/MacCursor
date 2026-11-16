@@ -1,6 +1,7 @@
 import CoreGraphics
 import Foundation
 import ImageIO
+import MacCursorCore
 import QuartzCore
 import UniformTypeIdentifiers
 
@@ -13,7 +14,7 @@ public enum SnapshotRenderer {
             ("light-screen", .forLightScreens, rgb(0xF5F5F5)),
             ("dark-screen", .forDarkScreens, rgb(0x262626)),
         ]
-        for kind in SkinKind.allCases {
+        for kind in PointerStyle.allCases {
             for (bgName, palette, bg) in backgrounds {
                 for state in ["idle", "click"] {
                     let url = dir.appendingPathComponent("\(kind.rawValue)-\(bgName)-\(state).png")
@@ -27,7 +28,7 @@ public enum SnapshotRenderer {
     }
 
     private static func render(
-        kind: SkinKind, palette: Palette, background: CGColor, click: Bool, to url: URL
+        kind: PointerStyle, palette: Palette, background: CGColor, click: Bool, to url: URL
     ) {
         let size = CGSize(width: 220, height: 300)
         let pixelScale: CGFloat = 2

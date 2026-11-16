@@ -2,18 +2,6 @@ import AppKit
 import MacCursorCore
 import MacCursorRender
 
-enum ColorMode: String, CaseIterable {
-    case auto, darkPointer, lightPointer
-
-    var title: String {
-        switch self {
-        case .auto: return "Auto (follow system appearance)"
-        case .darkPointer: return "Dark — for light screens"
-        case .lightPointer: return "Light — for dark screens"
-        }
-    }
-}
-
 enum Mood: String, CaseIterable {
     case subtle, normal, wild
 
@@ -33,14 +21,6 @@ final class Settings {
     static let shared = Settings()
     private let d = UserDefaults.standard
 
-    var skin: SkinKind {
-        get { SkinKind(rawValue: d.string(forKey: "skin") ?? "") ?? .dogPaw }
-        set { d.set(newValue.rawValue, forKey: "skin") }
-    }
-    var colorMode: ColorMode {
-        get { ColorMode(rawValue: d.string(forKey: "colorMode") ?? "") ?? .auto }
-        set { d.set(newValue.rawValue, forKey: "colorMode") }
-    }
     var mood: Mood {
         get { Mood(rawValue: d.string(forKey: "mood") ?? "") ?? .normal }
         set { d.set(newValue.rawValue, forKey: "mood") }
@@ -49,20 +29,16 @@ final class Settings {
         get { d.object(forKey: "sound") as? Bool ?? true }
         set { d.set(newValue, forKey: "sound") }
     }
-    var hideSystemCursor: Bool {
-        get { d.object(forKey: "hideSystemCursor") as? Bool ?? true }
-        set { d.set(newValue, forKey: "hideSystemCursor") }
-    }
+
+    let pointer = PointerSettings(store: UserDefaults.standard)
 
     func resolvedPalette() -> Palette {
-        switch colorMode {
-        case .darkPointer: return .forLightScreens
-        case .lightPointer: return .forDarkScreens
-        case .auto: return Self.systemIsDark() ? .forDarkScreens : .forLightScreens
-        }
+        .of(pointer.paletteKind(systemIsDark: Self.systemIsDark()))
     }
 
     static func systemIsDark() -> Bool {
         NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
     }
 }
+
+extension UserDefaults: SettingsStore {}

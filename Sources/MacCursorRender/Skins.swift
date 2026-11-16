@@ -1,19 +1,8 @@
 import CoreGraphics
+import MacCursorCore
 
 /// Pointer styles. All art is original and drawn in code. Coordinates: the hotspot
 /// (fingertip / paw tip) is at (0,0) and the paw extends downward (negative y).
-public enum SkinKind: String, CaseIterable, Sendable {
-    case dogPaw, catPaw, ring
-
-    public var title: String {
-        switch self {
-        case .dogPaw: return "Dog paw"
-        case .catPaw: return "Cat paw"
-        case .ring: return "Highlight ring"
-        }
-    }
-}
-
 public enum ParticleKind: Sendable { case bone, heart, dot }
 
 public struct SkinArt {
@@ -44,6 +33,10 @@ public struct Palette {
     /// Dark outline/effects: for light screens.
     public static let forLightScreens = Palette(outline: rgb(0x141414), effect: rgb(0x141414))
     /// Light outline/effects ("sticker" look): for dark screens.
+    public static func of(_ kind: PaletteKind) -> Palette {
+        kind == .forDarkScreens ? .forDarkScreens : .forLightScreens
+    }
+
     public static let forDarkScreens = Palette(outline: rgb(0xF4F4F4), effect: rgb(0xF4F4F4))
 }
 
@@ -71,7 +64,7 @@ private func moved(_ path: CGPath, dy: CGFloat, scale: CGFloat = 1) -> CGPath {
 }
 
 public enum Skins {
-    public static func art(for kind: SkinKind) -> SkinArt {
+    public static func art(for kind: PointerStyle) -> SkinArt {
         switch kind {
         case .dogPaw:
             // Big, round, slightly splayed toes with visible nails.

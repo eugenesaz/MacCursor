@@ -142,7 +142,7 @@ final class OverlayController {
 
     /// Re-read skin / color settings.
     func refreshStyle() {
-        art = Skins.art(for: settings.skin)
+        art = Skins.art(for: settings.pointer.style)
         palette = settings.resolvedPalette()
         lastSystemDark = Settings.systemIsDark()
         for overlay in overlays { overlay.rig.apply(art: art, palette: palette) }
@@ -150,7 +150,7 @@ final class OverlayController {
     }
 
     func updateCursorVisibility() {
-        CursorHider.setHidden(isEnabled && settings.hideSystemCursor && !art.isRing)
+        CursorHider.setHidden(isEnabled && settings.pointer.hidesSystemCursor && !art.isRing)
     }
 
     private func rebuild() {
@@ -164,7 +164,7 @@ final class OverlayController {
         let now = CACurrentMediaTime()
         tickCount += 1
         // Auto color: notice system light/dark switches (~twice a second).
-        if tickCount % 60 == 0, settings.colorMode == .auto,
+        if tickCount % 60 == 0, settings.pointer.colorMode == .auto,
             Settings.systemIsDark() != lastSystemDark
         {
             refreshStyle()

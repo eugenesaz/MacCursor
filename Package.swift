@@ -13,14 +13,12 @@ let package = Package(
         // Pointer art and layers (Core Graphics + Core Animation, no windows).
         .target(
             name: "MacCursorRender",
-            dependencies: ["MacCursorCore"],
-            swiftSettings: [.swiftLanguageMode(.v5)]
+            dependencies: ["MacCursorCore"]
         ),
         // The menu bar app: overlay windows, event monitors, private SkyLight calls.
         .executableTarget(
             name: "MacCursorApp",
-            dependencies: ["MacCursorCore", "MacCursorRender"],
-            swiftSettings: [.swiftLanguageMode(.v5)]
+            dependencies: ["MacCursorCore", "MacCursorRender"]
         ),
         .testTarget(name: "MacCursorCoreTests", dependencies: ["MacCursorCore"]),
         .testTarget(name: "MacCursorRenderTests", dependencies: ["MacCursorRender"]),

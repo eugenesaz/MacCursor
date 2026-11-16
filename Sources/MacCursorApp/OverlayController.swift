@@ -4,6 +4,7 @@ import MacCursorRender
 import QuartzCore
 
 /// One transparent, click-through window covering one display.
+@MainActor
 final class Overlay {
     let window: NSPanel
     let frame: CGRect
@@ -116,11 +117,13 @@ final class Overlay {
 }
 
 /// CADisplayLink needs an Objective-C target.
+@MainActor
 private final class FrameTarget: NSObject {
     var onFrame: (() -> Void)?
     @objc func frame() { onFrame?() }
 }
 
+@MainActor
 final class OverlayController {
     private var overlays: [Overlay] = []
     private var layout = DisplayLayout(frames: [])
@@ -143,8 +146,11 @@ final class OverlayController {
             forName: NSApplication.didChangeScreenParametersNotification,
             object: nil, queue: .main
         ) { [weak self] _ in
-            guard let self, self.isEnabled else { return }
-            self.scheduleRebuild()
+            // Delivered on the main queue.
+            MainActor.assumeIsolated {
+                guard let self, self.isEnabled else { return }
+                self.scheduleRebuild()
+            }
         }
     }
 

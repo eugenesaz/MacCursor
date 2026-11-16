@@ -26,7 +26,8 @@ public struct SkinArt {
 }
 
 /// Colors that depend on what's behind the pointer.
-public struct Palette {
+/// CGColor is immutable, so sharing palettes across threads is safe.
+public struct Palette: @unchecked Sendable {
     public let outline: CGColor
     public let effect: CGColor
 

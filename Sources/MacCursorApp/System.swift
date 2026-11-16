@@ -6,6 +6,7 @@ import MacCursorRender
 
 // MARK: - Global hotkeys (Carbon; needs no permissions)
 
+@MainActor
 final class HotKeys {
     static let shared = HotKeys()
     private var handlers: [UInt32: () -> Void] = [:]
@@ -45,6 +46,7 @@ final class HotKeys {
 
 // MARK: - Presentation mode: swallow mouse clicks, keep keyboard
 
+@MainActor
 final class PresentationMode {
     private var tap: CFMachPort?
     private var source: CFRunLoopSource?
@@ -52,7 +54,8 @@ final class PresentationMode {
     var isOn: Bool { tap != nil }
 
     static func hasAccessibility(prompt: Bool) -> Bool {
-        let key = kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String
+        // The value of kAXTrustedCheckOptionPrompt (a C global Swift 6 won't let us read).
+        let key = "AXTrustedCheckOptionPrompt"
         return AXIsProcessTrustedWithOptions([key: prompt] as CFDictionary)
     }
 

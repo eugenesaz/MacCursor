@@ -16,6 +16,7 @@ enum Mood: String, CaseIterable {
 }
 
 /// UserDefaults-backed preferences.
+@MainActor
 final class Settings {
     static let shared = Settings()
     private let d = UserDefaults.standard

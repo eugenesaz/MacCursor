@@ -1,13 +1,14 @@
 import AppKit
 
 /// Hides and shows the system cursor while another app is in front.
+@MainActor
 protocol CursorHiding: AnyObject {
     var isHidden: Bool { get }
     func setHidden(_ hide: Bool)
 }
 
 /// The app-wide hider: SkyLight when available, otherwise a no-op that logs once.
-let cursorHider: CursorHiding = SkyLightCursorHider.make() ?? UnavailableCursorHider()
+@MainActor let cursorHider: CursorHiding = SkyLightCursorHider.make() ?? UnavailableCursorHider()
 
 /// Used when the private API is missing (a future macOS may change it). The arrow stays
 /// visible and everything else keeps working.
@@ -53,7 +54,7 @@ final class SkyLightCursorHider: CursorHiding {
         let setProperty: SetPropFn?
     }
 
-    static let cursorName = "io.github.eugenesaz.maccursor.blank"
+    nonisolated static let cursorName = "io.github.eugenesaz.maccursor.blank"
 
     private let api: API
     private var watcher: Watcher?

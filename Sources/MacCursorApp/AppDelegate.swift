@@ -3,6 +3,7 @@ import Carbon.HIToolbox
 import MacCursorCore
 import MacCursorRender
 
+@MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var statusItem: NSStatusItem!
     private let controller = OverlayController()

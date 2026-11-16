@@ -3,7 +3,7 @@
 Notes for each release, written for people using MacCursor. The newest version is at the top.
 The section for a version is what the update dialog shows.
 
-## [Unreleased]
+## [0.5.0] - 2026-11-16
 
 - Clear the drawing by holding **⌘** and **right-clicking**, the same key you draw with. The
   right-click doesn't reach the app underneath. **Draw ▸ Clear drawing** still works too.

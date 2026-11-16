@@ -52,3 +52,6 @@ Needs a second display.
 | L1 | First launch (run `defaults delete io.github.eugenesaz.maccursor` first) | The paw is clearly smaller than the old proof of concept (0.75×) |
 | L2 | Drag the Size slider in the menu from end to end | The paw resizes live, from small to large, with no flicker |
 | L3 | Quit and relaunch | The size is kept |
+| L4 | Color: Auto. Switch System Settings → Appearance between Light and Dark | The paw's outline flips (dark on light, light on dark) within a second |
+| L5 | Color: Dark, then Light, with either system appearance | The outline stays dark, or light, as picked |
+| L6 | Try each style on a light page and on a dark editor | Each one reads clearly on both |

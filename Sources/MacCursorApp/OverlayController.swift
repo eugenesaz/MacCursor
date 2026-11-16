@@ -125,7 +125,7 @@ final class OverlayController {
     private var overlays: [Overlay] = []
     private var layout = DisplayLayout(frames: [])
     private var pendingRebuild: DispatchWorkItem?
-    private var appearanceTimer: Timer?
+    private var appearanceObservation: NSKeyValueObservation?
     private var monitors: [Any] = []
     private var clickTimes: [CFTimeInterval] = []
     private var lastClick: CFTimeInterval = -10
@@ -153,12 +153,10 @@ final class OverlayController {
         isEnabled = on
         if on {
             rebuild()
-            // Auto color: notice system light/dark switches twice a second.
-            let t = Timer(timeInterval: 0.5, repeats: true) { [weak self] _ in
-                self?.checkAppearance()
+            // Auto color: follow system light/dark switches as they happen.
+            appearanceObservation = NSApp.observe(\.effectiveAppearance) { [weak self] _, _ in
+                DispatchQueue.main.async { self?.checkAppearance() }
             }
-            RunLoop.main.add(t, forMode: .common)
-            appearanceTimer = t
             let moves: NSEvent.EventTypeMask = [
                 .mouseMoved, .leftMouseDragged, .rightMouseDragged, .otherMouseDragged,
             ]
@@ -192,8 +190,7 @@ final class OverlayController {
                 monitors.append(l)
             }
         } else {
-            appearanceTimer?.invalidate()
-            appearanceTimer = nil
+            appearanceObservation = nil
             monitors.forEach(NSEvent.removeMonitor)
             monitors.removeAll()
             for overlay in overlays { overlay.close() }

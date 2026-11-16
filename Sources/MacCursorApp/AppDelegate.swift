@@ -1,4 +1,6 @@
 import AppKit
+import MacCursorCore
+import MacCursorRender
 import Carbon.HIToolbox
 
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {

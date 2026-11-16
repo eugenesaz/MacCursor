@@ -1,14 +1,20 @@
 #!/usr/bin/env bash
-# Builds build/MacCursor.app (ad-hoc signed).
-# Uses swiftc directly so it works with just the Command Line Tools.
+# Builds build/MacCursor.app from the Swift package and signs it.
+# CODESIGN_IDENTITY overrides the signing identity; the default "-" means ad-hoc.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+# shellcheck source=swift-env.sh
+source scripts/swift-env.sh
+
+IDENTITY="${CODESIGN_IDENTITY:--}"
 APP=build/MacCursor.app
+
+swift build -c release --product MacCursor
+BIN="$(swift build -c release --show-bin-path)/MacCursor"
+
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS"
-swiftc -O -swift-version 5 -target "$(uname -m)-apple-macosx14.0" \
-  -framework AppKit -framework Carbon \
-  Sources/MacCursor/*.swift -o "$APP/Contents/MacOS/MacCursor"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
-codesign --force --sign - "$APP" >/dev/null
+cp "$BIN" "$APP/Contents/MacOS/MacCursor"
+codesign --force --sign "$IDENTITY" "$APP" >/dev/null
 echo "Built $APP"

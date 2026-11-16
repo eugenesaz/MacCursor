@@ -1,4 +1,6 @@
 import AppKit
+import MacCursorCore
+import MacCursorRender
 import ApplicationServices
 import Carbon.HIToolbox
 

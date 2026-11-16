@@ -1,11 +1,12 @@
-import AppKit
+import CoreGraphics
+import Foundation
 import ImageIO
 import QuartzCore
 import UniformTypeIdentifiers
 
 /// Offscreen renders of the pointer art, for design review and README images.
-enum SnapshotRenderer {
-    static func run(directory: String) {
+public enum SnapshotRenderer {
+    public static func run(directory: String) {
         let dir = URL(fileURLWithPath: directory)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         let backgrounds: [(String, Palette, CGColor)] = [

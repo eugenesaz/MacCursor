@@ -1,4 +1,6 @@
 import AppKit
+import MacCursorCore
+import MacCursorRender
 
 enum ColorMode: String, CaseIterable {
     case auto, darkPointer, lightPointer

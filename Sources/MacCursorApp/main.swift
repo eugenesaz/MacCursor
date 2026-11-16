@@ -1,4 +1,6 @@
 import AppKit
+import MacCursorCore
+import MacCursorRender
 
 // `MacCursor --render <dir>` renders every skin × palette × state to PNGs (no permissions needed).
 let args = CommandLine.arguments

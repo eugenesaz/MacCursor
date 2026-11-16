@@ -1,10 +1,9 @@
-import AppKit
 import QuartzCore
 
 /// The layers that make up the pointer: a fading leg reaching in from off-screen,
 /// and the paw on top. Positioned at the hotspot, rotated so the leg points away.
-final class PointerRig {
-    let root = CALayer()
+public final class PointerRig {
+    public let root = CALayer()
 
     // Draw order: leg edges → paw outline → leg fill → paw fill. This merges
     // leg and paw into one silhouette with a single continuous outline.
@@ -21,7 +20,7 @@ final class PointerRig {
     static let outlineWidth: CGFloat = 2.5
     static let legLength: CGFloat = 560
 
-    init(contentsScale: CGFloat) {
+    public init(contentsScale: CGFloat) {
         let all: [CALayer] = [root, legEdgeL, legEdgeR, back, legFill, front, outline, fur, pads, nails]
         for l in all {
             l.contentsScale = contentsScale
@@ -42,7 +41,7 @@ final class PointerRig {
         root.addSublayer(front)
     }
 
-    func apply(art: SkinArt, palette: Palette) {
+    public func apply(art: SkinArt, palette: Palette) {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         defer { CATransaction.commit() }
@@ -87,7 +86,7 @@ final class PointerRig {
 
     /// - angle: radians, CCW; 0 = leg straight down.
     /// - squash: 0…1 poke animation amount.
-    func setPose(position: CGPoint, angle: CGFloat, scale: CGFloat, squash: CGFloat) {
+    public func setPose(position: CGPoint, angle: CGFloat, scale: CGFloat, squash: CGFloat) {
         root.position = position
         root.setAffineTransform(CGAffineTransform(rotationAngle: angle).scaledBy(x: scale, y: scale))
         let t = CGAffineTransform(translationX: 0, y: 5 * squash)
@@ -99,10 +98,10 @@ final class PointerRig {
 
 /// One click's visual feedback: ripple, paw-print stamp and (when clicking fast) particles.
 /// Driven by `render(t:)` so the same code serves live animation and static snapshots.
-final class ClickEffect {
-    let layer = CALayer()
-    let start: CFTimeInterval
-    static let duration: CFTimeInterval = 1.1
+public final class ClickEffect {
+    public let layer = CALayer()
+    public let start: CFTimeInterval
+    public static let duration: CFTimeInterval = 1.1
 
     private let ripple = CAShapeLayer()
     private var stamp: CAShapeLayer?
@@ -111,7 +110,7 @@ final class ClickEffect {
     private let intensity: CGFloat
     private let scale: CGFloat
 
-    init(tip: CGPoint, angle: CGFloat, art: SkinArt, palette: Palette,
+    public init(tip: CGPoint, angle: CGFloat, art: SkinArt, palette: Palette,
          intensity: CGFloat, scale: CGFloat, contentsScale: CGFloat, start: CFTimeInterval) {
         self.start = start
         self.intensity = intensity
@@ -167,7 +166,7 @@ final class ClickEffect {
         render(t: 0)
     }
 
-    func render(t: CFTimeInterval) {
+    public func render(t: CFTimeInterval) {
         let rt = min(t / 0.45, 1)
         let r = (10 + 22 * intensity * easeOut(rt)) * scale
         ripple.path = CGPath(ellipseIn: CGRect(x: -r, y: -r, width: 2 * r, height: 2 * r), transform: nil)
@@ -191,7 +190,7 @@ final class ClickEffect {
     }
 
     /// Returns false (and removes itself) once finished.
-    func update(now: CFTimeInterval) -> Bool {
+    public func update(now: CFTimeInterval) -> Bool {
         let t = now - start
         if t >= Self.duration {
             layer.removeFromSuperlayer()

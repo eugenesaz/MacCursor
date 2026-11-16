@@ -1,4 +1,6 @@
 import AppKit
+import MacCursorCore
+import MacCursorRender
 import QuartzCore
 
 /// One transparent, click-through window covering one display.

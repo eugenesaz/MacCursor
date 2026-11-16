@@ -54,6 +54,8 @@ extension OverlayController: PointerController {
         }
     }
 
+    var palette: Palette { settings.resolvedPalette() }
+
     var tip: (location: CGPoint, display: Int?) {
         let mouse = NSEvent.mouseLocation
         return (mouse, displayIndex(for: mouse))

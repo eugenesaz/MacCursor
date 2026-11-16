@@ -43,18 +43,15 @@ import Testing
         #expect(DisplayLayout(frames: []).index(containing: .zero) == nil)
     }
 
-    @Test func localPointIsExactAtEveryCorner() {
-        let frame = CGRect(x: -2560, y: 0, width: 2560, height: 1440)
-        let corners = [
-            CGPoint(x: frame.minX, y: frame.minY), CGPoint(x: frame.maxX, y: frame.minY),
-            CGPoint(x: frame.minX, y: frame.maxY), CGPoint(x: frame.maxX, y: frame.maxY),
-        ]
-        for p in corners {
-            let local = DisplayLayout.local(p, in: frame)
-            #expect(abs(local.x + frame.minX - p.x) < 0.001)
-            #expect(abs(local.y + frame.minY - p.y) < 0.001)
-        }
-        #expect(DisplayLayout.local(CGPoint(x: -2560, y: 0), in: frame) == .zero)
+    @Test func localPointIsRelativeToTheDisplaysBottomLeft() {
+        let external = CGRect(x: -2560, y: 0, width: 2560, height: 1440)
+        #expect(DisplayLayout.local(CGPoint(x: -2560, y: 0), in: external) == .zero)
+        #expect(
+            DisplayLayout.local(CGPoint(x: -1, y: 1440), in: external)
+                == CGPoint(x: 2559, y: 1440))
+        let above = CGRect(x: -300, y: 982, width: 1920, height: 1080)
+        #expect(
+            DisplayLayout.local(CGPoint(x: 0, y: 1000), in: above) == CGPoint(x: 300, y: 18))
     }
 
     @Test func legLeansMoreOnTheLeft() {

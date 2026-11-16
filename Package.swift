@@ -21,7 +21,9 @@ let package = Package(
             dependencies: ["MacCursorCore", "MacCursorRender"]
         ),
         .testTarget(name: "MacCursorCoreTests", dependencies: ["MacCursorCore"]),
-        .testTarget(name: "MacCursorRenderTests", dependencies: ["MacCursorRender"]),
+        .testTarget(
+            name: "MacCursorRenderTests", dependencies: ["MacCursorRender"],
+            exclude: ["Snapshots"]),
     ],
     swiftLanguageModes: [.v6]
 )

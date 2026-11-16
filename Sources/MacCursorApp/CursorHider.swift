@@ -49,7 +49,7 @@ final class SkyLightCursorHider: CursorHiding {
         let setRegistered: SetRegisteredFn
         let seed: SeedFn
         let remove: RemoveFn?
-        let setSystem: SetSystemFn?
+        let setSystem: SetSystemFn
         let dock: DockFn?
         let setProperty: SetPropFn?
     }
@@ -73,12 +73,14 @@ final class SkyLightCursorHider: CursorHiding {
         guard let c = load("SLSMainConnectionID", ConnFn.self),
             let r = load("SLSRegisterCursorWithImages", RegisterFn.self),
             let s = load("SLSSetRegisteredCursor", SetRegisteredFn.self),
-            let seed = load("SLSCurrentCursorSeed", SeedFn.self)
+            let seed = load("SLSCurrentCursorSeed", SeedFn.self),
+            // Required too: without it we could hide the arrow but never bring it back.
+            let setSystem = load("SLSSetSystemDefinedCursor", SetSystemFn.self)
         else { return nil }
         let api = API(
             connection: c, register: r, setRegistered: s, seed: seed,
             remove: load("SLSRemoveRegisteredCursor", RemoveFn.self),
-            setSystem: load("SLSSetSystemDefinedCursor", SetSystemFn.self),
+            setSystem: setSystem,
             dock: load("SLSSetDockCursorOverride", DockFn.self),
             setProperty: load("SLSSetConnectionProperty", SetPropFn.self))
         return SkyLightCursorHider(api: api)
@@ -131,7 +133,7 @@ final class SkyLightCursorHider: CursorHiding {
         let cid = api.connection()
         _ = api.dock?(cid, false)
         _ = Self.cursorName.withCString { api.remove?(cid, $0, true) }
-        _ = api.setSystem?(cid, 0)  // back to the arrow
+        _ = api.setSystem(cid, 0)  // back to the arrow
         log("show system cursor")
     }
 

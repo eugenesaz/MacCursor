@@ -1,4 +1,6 @@
 import AppKit
+import MacCursorCore
+import MacCursorRender
 import QuartzCore
 
 /// One transparent, click-through window covering one display.
@@ -13,16 +15,19 @@ final class Overlay {
     init(screen: NSScreen) {
         frame = screen.frame
         backingScale = screen.backingScaleFactor
-        window = NSPanel(contentRect: frame, styleMask: [.borderless, .nonactivatingPanel],
-                         backing: .buffered, defer: false)
+        window = NSPanel(
+            contentRect: frame, styleMask: [.borderless, .nonactivatingPanel],
+            backing: .buffered, defer: false)
         window.isOpaque = false
         window.backgroundColor = .clear
         window.hasShadow = false
         window.ignoresMouseEvents = true
         window.level = .screenSaver
-        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
+        window.collectionBehavior = [
+            .canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle,
+        ]
         window.isReleasedWhenClosed = false
-        window.sharingType = .readOnly // must show up in screen shares & recordings
+        window.sharingType = .readOnly  // must show up in screen shares & recordings
         window.setFrame(frame, display: false)
 
         let view = NSView(frame: CGRect(origin: .zero, size: frame.size))
@@ -55,15 +60,22 @@ final class Overlay {
         effects = effects.filter { $0.update(now: now) }
     }
 
-    func addEffect(at mouse: CGPoint, art: SkinArt, palette: Palette, intensity: CGFloat, scale: CGFloat, now: CFTimeInterval) {
+    func addEffect(
+        at mouse: CGPoint, art: SkinArt, palette: Palette, intensity: CGFloat, scale: CGFloat,
+        now: CFTimeInterval
+    ) {
         let p = local(mouse)
-        let fx = ClickEffect(tip: p, angle: angle(at: p), art: art, palette: palette,
-                             intensity: intensity, scale: scale, contentsScale: backingScale, start: now)
+        let fx = ClickEffect(
+            tip: p, angle: angle(at: p), art: art, palette: palette,
+            intensity: intensity, scale: scale, contentsScale: backingScale, start: now)
         effectsLayer.addSublayer(fx.layer)
         effects.append(fx)
     }
 
-    func close() { window.orderOut(nil); window.close() }
+    func close() {
+        window.orderOut(nil)
+        window.close()
+    }
 }
 
 final class OverlayController {
@@ -83,8 +95,10 @@ final class OverlayController {
 
     init() {
         presentation.onClick = { [weak self] in self?.handleClick() }
-        NotificationCenter.default.addObserver(forName: NSApplication.didChangeScreenParametersNotification,
-                                               object: nil, queue: .main) { [weak self] _ in
+        NotificationCenter.default.addObserver(
+            forName: NSApplication.didChangeScreenParametersNotification,
+            object: nil, queue: .main
+        ) { [weak self] _ in
             guard let self, self.isEnabled else { return }
             self.rebuild()
         }
@@ -99,10 +113,18 @@ final class OverlayController {
             RunLoop.main.add(t, forMode: .common)
             timer = t
             let mask: NSEvent.EventTypeMask = [.leftMouseDown, .rightMouseDown, .otherMouseDown]
-            if let g = NSEvent.addGlobalMonitorForEvents(matching: mask, handler: { [weak self] _ in self?.handleClick() }) {
+            if let g = NSEvent.addGlobalMonitorForEvents(
+                matching: mask, handler: { [weak self] _ in self?.handleClick() })
+            {
                 monitors.append(g)
             }
-            if let l = NSEvent.addLocalMonitorForEvents(matching: mask, handler: { [weak self] e in self?.handleClick(); return e }) {
+            if let l = NSEvent.addLocalMonitorForEvents(
+                matching: mask,
+                handler: { [weak self] e in
+                    self?.handleClick()
+                    return e
+                })
+            {
                 monitors.append(l)
             }
         } else {
@@ -110,7 +132,7 @@ final class OverlayController {
             timer = nil
             monitors.forEach(NSEvent.removeMonitor)
             monitors.removeAll()
-            overlays.forEach { $0.close() }
+            for overlay in overlays { overlay.close() }
             overlays.removeAll()
             presentation.disable()
         }
@@ -120,19 +142,19 @@ final class OverlayController {
 
     /// Re-read skin / color settings.
     func refreshStyle() {
-        art = Skins.art(for: settings.skin)
+        art = Skins.art(for: settings.pointer.style)
         palette = settings.resolvedPalette()
         lastSystemDark = Settings.systemIsDark()
-        overlays.forEach { $0.rig.apply(art: art, palette: palette) }
+        for overlay in overlays { overlay.rig.apply(art: art, palette: palette) }
         updateCursorVisibility()
     }
 
     func updateCursorVisibility() {
-        CursorHider.setHidden(isEnabled && settings.hideSystemCursor && !art.isRing)
+        CursorHider.setHidden(isEnabled && settings.pointer.hidesSystemCursor && !art.isRing)
     }
 
     private func rebuild() {
-        overlays.forEach { $0.close() }
+        for overlay in overlays { overlay.close() }
         overlays = NSScreen.screens.map(Overlay.init)
         refreshStyle()
         log("overlays: \(overlays.count) display(s)")
@@ -142,16 +164,22 @@ final class OverlayController {
         let now = CACurrentMediaTime()
         tickCount += 1
         // Auto color: notice system light/dark switches (~twice a second).
-        if tickCount % 60 == 0, settings.colorMode == .auto, Settings.systemIsDark() != lastSystemDark {
+        if tickCount % 60 == 0, settings.pointer.colorMode == .auto,
+            Settings.systemIsDark() != lastSystemDark
+        {
             refreshStyle()
         }
         let mood = settings.mood
         let t = now - lastClick
-        let squash = art.isRing ? 0 : t < 0.2 ? CGFloat(sin(.pi * t / 0.2)) * min(1, 0.6 + 0.2 * lastIntensity) : 0
+        let squash =
+            art.isRing
+            ? 0 : t < 0.2 ? CGFloat(sin(.pi * t / 0.2)) * min(1, 0.6 + 0.2 * lastIntensity) : 0
         let mouse = NSEvent.mouseLocation
         CATransaction.begin()
         CATransaction.setDisableActions(true)
-        overlays.forEach { $0.update(mouse: mouse, now: now, scale: mood.scale, squash: squash) }
+        for overlay in overlays {
+            overlay.update(mouse: mouse, now: now, scale: mood.scale, squash: squash)
+        }
         CATransaction.commit()
     }
 
@@ -167,7 +195,9 @@ final class OverlayController {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         overlays.first { $0.contains(mouse) }?
-            .addEffect(at: mouse, art: art, palette: palette, intensity: lastIntensity, scale: mood.scale, now: now)
+            .addEffect(
+                at: mouse, art: art, palette: palette, intensity: lastIntensity, scale: mood.scale,
+                now: now)
         CATransaction.commit()
         if settings.sound, let s = NSSound(named: "Pop")?.copy() as? NSSound {
             s.volume = 0.4

@@ -1,57 +1,51 @@
-import AppKit
+import CoreGraphics
+import MacCursorCore
 
 /// Pointer styles. All art is original and drawn in code. Coordinates: the hotspot
 /// (fingertip / paw tip) is at (0,0) and the paw extends downward (negative y).
-enum SkinKind: String, CaseIterable {
-    case dogPaw, catPaw, ring
+public enum ParticleKind: Sendable { case bone, heart, dot }
 
-    var title: String {
-        switch self {
-        case .dogPaw: return "Dog paw"
-        case .catPaw: return "Cat paw"
-        case .ring: return "Highlight ring"
-        }
-    }
-}
-
-enum ParticleKind { case bone, heart, dot }
-
-struct SkinArt {
-    var silhouette: CGPath
-    var fur: CGColor
-    var pads: CGPath? = nil
-    var padColor: CGColor = rgb(0x000000)
-    var nails: CGPath? = nil
-    var nailColor: CGColor = rgb(0x000000)
+public struct SkinArt {
+    public var silhouette: CGPath
+    public var fur: CGColor
+    public var pads: CGPath? = nil
+    public var padColor: CGColor = rgb(0x000000)
+    public var nails: CGPath? = nil
+    public var nailColor: CGColor = rgb(0x000000)
     /// 0 = no arm/leg.
-    var armWidth: CGFloat = 0
+    public var armWidth: CGFloat = 0
     /// Y where the leg attaches under the paw body.
-    var armTop: CGFloat = 0
-    var isRing = false
+    public var armTop: CGFloat = 0
+    public var isRing = false
     /// Paw print left behind on click, centered at (0,0).
-    var stamp: CGPath? = nil
+    public var stamp: CGPath? = nil
     /// Where the paw print sits relative to the tip (before rotation).
-    var stampOffsetY: CGFloat = 0
-    var particle: ParticleKind = .dot
-    var particleColor: CGColor = rgb(0xFFD23F)
+    public var stampOffsetY: CGFloat = 0
+    public var particle: ParticleKind = .dot
+    public var particleColor: CGColor = rgb(0xFFD23F)
 }
 
 /// Colors that depend on what's behind the pointer.
-struct Palette {
-    let outline: CGColor
-    let effect: CGColor
+public struct Palette {
+    public let outline: CGColor
+    public let effect: CGColor
 
     /// Dark outline/effects: for light screens.
-    static let forLightScreens = Palette(outline: rgb(0x141414), effect: rgb(0x141414))
+    public static let forLightScreens = Palette(outline: rgb(0x141414), effect: rgb(0x141414))
     /// Light outline/effects ("sticker" look): for dark screens.
-    static let forDarkScreens = Palette(outline: rgb(0xF4F4F4), effect: rgb(0xF4F4F4))
+    public static func of(_ kind: PaletteKind) -> Palette {
+        kind == .forDarkScreens ? .forDarkScreens : .forLightScreens
+    }
+
+    public static let forDarkScreens = Palette(outline: rgb(0xF4F4F4), effect: rgb(0xF4F4F4))
 }
 
-func rgb(_ hex: UInt32, _ alpha: CGFloat = 1) -> CGColor {
-    CGColor(srgbRed: CGFloat((hex >> 16) & 0xFF) / 255,
-            green: CGFloat((hex >> 8) & 0xFF) / 255,
-            blue: CGFloat(hex & 0xFF) / 255,
-            alpha: alpha)
+public func rgb(_ hex: UInt32, _ alpha: CGFloat = 1) -> CGColor {
+    CGColor(
+        srgbRed: CGFloat((hex >> 16) & 0xFF) / 255,
+        green: CGFloat((hex >> 8) & 0xFF) / 255,
+        blue: CGFloat(hex & 0xFF) / 255,
+        alpha: alpha)
 }
 
 private typealias Oval = (x: CGFloat, y: CGFloat, rx: CGFloat, ry: CGFloat)
@@ -69,12 +63,14 @@ private func moved(_ path: CGPath, dy: CGFloat, scale: CGFloat = 1) -> CGPath {
     return path.copy(using: &t) ?? path
 }
 
-enum Skins {
-    static func art(for kind: SkinKind) -> SkinArt {
+public enum Skins {
+    public static func art(for kind: PointerStyle) -> SkinArt {
         switch kind {
         case .dogPaw:
             // Big, round, slightly splayed toes with visible nails.
-            let toes: [Oval] = [(-19, -18, 8, 9), (-7, -10, 8.5, 10), (7, -10, 8.5, 10), (19, -18, 8, 9)]
+            let toes: [Oval] = [
+                (-19, -18, 8, 9), (-7, -10, 8.5, 10), (7, -10, 8.5, 10), (19, -18, 8, 9),
+            ]
             let body: Oval = (0, -37, 23, 21)
             let toePads = toes.map { Oval($0.x, $0.y - 1.5, $0.rx * 0.6, $0.ry * 0.6) }
             let mainPad: [Oval] = [(0, -39, 11, 8.5), (-7, -44, 7.5, 6), (7, -44, 7.5, 6)]
@@ -91,7 +87,9 @@ enum Skins {
 
         case .catPaw:
             // Smaller, rounder, pink toe beans, claws retracted.
-            let toes: [Oval] = [(-15, -15, 6.5, 7), (-5.5, -8, 7, 8), (5.5, -8, 7, 8), (15, -15, 6.5, 7)]
+            let toes: [Oval] = [
+                (-15, -15, 6.5, 7), (-5.5, -8, 7, 8), (5.5, -8, 7, 8), (15, -15, 6.5, 7),
+            ]
             let body: Oval = (0, -31, 19, 17.5)
             let beans = toes.map { Oval($0.x, $0.y - 1, $0.rx * 0.62, $0.ry * 0.62) }
             let mainPad: [Oval] = [(0, -33, 9, 7), (-5.5, -37, 6, 5), (5.5, -37, 6, 5)]
@@ -113,11 +111,13 @@ enum Skins {
         }
     }
 
-    static func particlePath(_ kind: ParticleKind) -> CGPath {
+    public static func particlePath(_ kind: ParticleKind) -> CGPath {
         switch kind {
         case .bone:
             let p = CGMutablePath()
-            p.addRoundedRect(in: CGRect(x: -6, y: -1.8, width: 12, height: 3.6), cornerWidth: 1.5, cornerHeight: 1.5)
+            p.addRoundedRect(
+                in: CGRect(x: -6, y: -1.8, width: 12, height: 3.6), cornerWidth: 1.5,
+                cornerHeight: 1.5)
             for (x, y) in [(-6.0, -1.8), (-6.0, 1.8), (6.0, -1.8), (6.0, 1.8)] {
                 p.addEllipse(in: CGRect(x: x - 2.4, y: y - 2.4, width: 4.8, height: 4.8))
             }

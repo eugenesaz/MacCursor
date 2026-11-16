@@ -1,6 +1,8 @@
 import AppKit
 import ApplicationServices
 import Carbon.HIToolbox
+import MacCursorCore
+import MacCursorRender
 
 // MARK: - Hiding the system cursor from a background app
 
@@ -11,7 +13,9 @@ import Carbon.HIToolbox
 private func _CGSDefaultConnection() -> Int32
 
 @_silgen_name("CGSSetConnectionProperty")
-private func CGSSetConnectionProperty(_ cid: Int32, _ targetCID: Int32, _ key: CFString, _ value: CFTypeRef) -> Int32
+private func cgsSetConnectionProperty(
+    _ cid: Int32, _ targetCID: Int32, _ key: CFString, _ value: CFTypeRef
+) -> Int32
 
 enum CursorHider {
     private(set) static var isHidden = false
@@ -20,9 +24,12 @@ enum CursorHider {
         guard hide != isHidden else { return }
         if hide {
             let cid = _CGSDefaultConnection()
-            let err = CGSSetConnectionProperty(cid, cid, "SetsCursorInBackground" as CFString, kCFBooleanTrue)
+            let err = cgsSetConnectionProperty(
+                cid, cid, "SetsCursorInBackground" as CFString, kCFBooleanTrue)
             let r = CGDisplayHideCursor(CGMainDisplayID())
-            log("hide system cursor: CGSSetConnectionProperty=\(err) CGDisplayHideCursor=\(r.rawValue)")
+            log(
+                "hide system cursor: CGSSetConnectionProperty=\(err) CGDisplayHideCursor=\(r.rawValue)"
+            )
         } else {
             CGDisplayShowCursor(CGMainDisplayID())
             log("show system cursor")
@@ -43,9 +50,10 @@ final class HotKeys {
         installIfNeeded()
         handlers[id] = handler
         var ref: EventHotKeyRef?
-        let hkID = EventHotKeyID(signature: OSType(0x4D435352), id: id) // 'MCSR'
-        let status = RegisterEventHotKey(UInt32(keyCode), UInt32(modifiers), hkID,
-                                         GetApplicationEventTarget(), 0, &ref)
+        let hkID = EventHotKeyID(signature: OSType(0x4D43_5352), id: id)  // 'MCSR'
+        let status = RegisterEventHotKey(
+            UInt32(keyCode), UInt32(modifiers), hkID,
+            GetApplicationEventTarget(), 0, &ref)
         if let ref { refs.append(ref) }
         log("hotkey \(id) registered: \(status == noErr)")
     }
@@ -53,14 +61,19 @@ final class HotKeys {
     private func installIfNeeded() {
         guard !installed else { return }
         installed = true
-        var spec = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
-        InstallEventHandler(GetApplicationEventTarget(), { _, event, _ in
-            var hk = EventHotKeyID()
-            GetEventParameter(event, EventParamName(kEventParamDirectObject), EventParamType(typeEventHotKeyID),
-                              nil, MemoryLayout<EventHotKeyID>.size, nil, &hk)
-            DispatchQueue.main.async { HotKeys.shared.handlers[hk.id]?() }
-            return noErr
-        }, 1, &spec, nil, nil)
+        var spec = EventTypeSpec(
+            eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
+        InstallEventHandler(
+            GetApplicationEventTarget(),
+            { _, event, _ in
+                var hk = EventHotKeyID()
+                GetEventParameter(
+                    event, EventParamName(kEventParamDirectObject),
+                    EventParamType(typeEventHotKeyID),
+                    nil, MemoryLayout<EventHotKeyID>.size, nil, &hk)
+                DispatchQueue.main.async { HotKeys.shared.handlers[hk.id]?() }
+                return noErr
+            }, 1, &spec, nil, nil)
     }
 }
 
@@ -85,27 +98,30 @@ final class PresentationMode {
             log("presentation mode: Accessibility permission missing")
             return false
         }
-        let types: [CGEventType] = [.leftMouseDown, .leftMouseUp, .rightMouseDown, .rightMouseUp,
-                                    .otherMouseDown, .otherMouseUp]
+        let types: [CGEventType] = [
+            .leftMouseDown, .leftMouseUp, .rightMouseDown, .rightMouseUp,
+            .otherMouseDown, .otherMouseUp,
+        ]
         let mask = types.reduce(CGEventMask(0)) { $0 | (CGEventMask(1) << $1.rawValue) }
         let me = Unmanaged.passUnretained(self).toOpaque()
-        guard let tap = CGEvent.tapCreate(
-            tap: .cgSessionEventTap, place: .headInsertEventTap, options: .defaultTap,
-            eventsOfInterest: mask,
-            callback: { _, type, event, refcon in
-                let pm = Unmanaged<PresentationMode>.fromOpaque(refcon!).takeUnretainedValue()
-                switch type {
-                case .tapDisabledByTimeout, .tapDisabledByUserInput:
-                    if let t = pm.tap { CGEvent.tapEnable(tap: t, enable: true) }
-                    return Unmanaged.passUnretained(event)
-                case .leftMouseDown, .rightMouseDown, .otherMouseDown:
-                    DispatchQueue.main.async { pm.onClick?() }
-                    return nil // swallow
-                default:
-                    return nil // swallow the matching mouse-up
-                }
-            },
-            userInfo: me)
+        guard
+            let tap = CGEvent.tapCreate(
+                tap: .cgSessionEventTap, place: .headInsertEventTap, options: .defaultTap,
+                eventsOfInterest: mask,
+                callback: { _, type, event, refcon in
+                    let pm = Unmanaged<PresentationMode>.fromOpaque(refcon!).takeUnretainedValue()
+                    switch type {
+                    case .tapDisabledByTimeout, .tapDisabledByUserInput:
+                        if let t = pm.tap { CGEvent.tapEnable(tap: t, enable: true) }
+                        return Unmanaged.passUnretained(event)
+                    case .leftMouseDown, .rightMouseDown, .otherMouseDown:
+                        DispatchQueue.main.async { pm.onClick?() }
+                        return nil  // swallow
+                    default:
+                        return nil  // swallow the matching mouse-up
+                    }
+                },
+                userInfo: me)
         else {
             log("presentation mode: tapCreate failed")
             return false

@@ -1,5 +1,7 @@
 import AppKit
 import Carbon.HIToolbox
+import MacCursorCore
+import MacCursorRender
 
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var statusItem: NSStatusItem!
@@ -13,10 +15,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         statusItem.menu = menu
         updateIcon()
 
-        HotKeys.shared.register(id: 1, keyCode: kVK_ANSI_P, modifiers: controlKey | optionKey) { [weak self] in
+        HotKeys.shared.register(id: 1, keyCode: kVK_ANSI_P, modifiers: controlKey | optionKey) {
+            [weak self] in
             self?.togglePointer()
         }
-        HotKeys.shared.register(id: 2, keyCode: kVK_ANSI_T, modifiers: controlKey | optionKey) { [weak self] in
+        HotKeys.shared.register(id: 2, keyCode: kVK_ANSI_T, modifiers: controlKey | optionKey) {
+            [weak self] in
             self?.togglePresentation()
         }
         controller.setEnabled(true)
@@ -41,7 +45,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             if !controller.presentation.enable() {
                 let alert = NSAlert()
                 alert.messageText = "Presentation mode needs Accessibility access"
-                alert.informativeText = "Enable MacCursor in System Settings → Privacy & Security → Accessibility, then try again. Clicks are blocked from reaching apps while it's on; press ⌃⌥T to exit."
+                alert.informativeText =
+                    "Enable MacCursor in System Settings → Privacy & Security → Accessibility, then try again. Clicks are blocked from reaching apps while it's on; press ⌃⌥T to exit."
                 NSApp.activate(ignoringOtherApps: true)
                 alert.runModal()
             }
@@ -50,7 +55,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc private func pickSkin(_ sender: NSMenuItem) {
-        settings.skin = SkinKind(rawValue: sender.representedObject as! String)!
+        settings.pointer.style = PointerStyle(rawValue: sender.representedObject as! String)!
         controller.refreshStyle()
     }
 
@@ -59,21 +64,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc private func pickColor(_ sender: NSMenuItem) {
-        settings.colorMode = ColorMode(rawValue: sender.representedObject as! String)!
+        settings.pointer.colorMode = ColorMode(rawValue: sender.representedObject as! String)!
         controller.refreshStyle()
     }
 
     @objc private func toggleSound() { settings.sound.toggle() }
 
     @objc private func toggleHideCursor() {
-        settings.hideSystemCursor.toggle()
+        settings.pointer.hidesSystemCursor.toggle()
         controller.updateCursorVisibility()
     }
 
     private func updateIcon() {
-        let name = controller.presentation.isOn ? "pawprint.circle.fill"
+        let name =
+            controller.presentation.isOn
+            ? "pawprint.circle.fill"
             : controller.isEnabled ? "pawprint.fill" : "pawprint"
-        statusItem.button?.image = NSImage(systemSymbolName: name, accessibilityDescription: "MacCursor")
+        statusItem.button?.image = NSImage(
+            systemSymbolName: name, accessibilityDescription: "MacCursor")
     }
 
     // MARK: Menu
@@ -90,10 +98,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         menu.addItem(.separator())
         menu.addItem(header("Style"))
-        for kind in SkinKind.allCases {
+        for kind in PointerStyle.allCases {
             let i = item(kind.title, #selector(pickSkin(_:)))
             i.representedObject = kind.rawValue
-            i.state = settings.skin == kind ? .on : .off
+            i.state = settings.pointer.style == kind ? .on : .off
             menu.addItem(i)
         }
 
@@ -110,7 +118,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         for mode in ColorMode.allCases {
             let i = item(mode.title, #selector(pickColor(_:)))
             i.representedObject = mode.rawValue
-            i.state = settings.colorMode == mode ? .on : .off
+            i.state = settings.pointer.colorMode == mode ? .on : .off
             colorMenu.addItem(i)
         }
         colorItem.submenu = colorMenu
@@ -121,11 +129,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         sound.state = settings.sound ? .on : .off
         menu.addItem(sound)
         let hide = item("Hide system cursor", #selector(toggleHideCursor))
-        hide.state = settings.hideSystemCursor ? .on : .off
+        hide.state = settings.pointer.hidesSystemCursor ? .on : .off
         menu.addItem(hide)
 
         menu.addItem(.separator())
-        menu.addItem(NSMenuItem(title: "Quit MacCursor", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+        menu.addItem(
+            NSMenuItem(
+                title: "Quit MacCursor", action: #selector(NSApplication.terminate(_:)),
+                keyEquivalent: "q"))
     }
 
     private func item(_ title: String, _ action: Selector, key: String = "") -> NSMenuItem {

@@ -78,7 +78,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           version="${GITHUB_REF_NAME#v}"
+          cat build/notes.md .github/release-install.md > build/release-notes.md
           gh release create "$GITHUB_REF_NAME" \
             "build/MacCursor-$version.zip" "build/MacCursor-$version.zip.sha256" \
             build/appcast.xml build/style-template.maccursorstyle \
-            --title "MacCursor $version" --notes-file build/notes.md
+            --title "MacCursor $version" --notes-file build/release-notes.md

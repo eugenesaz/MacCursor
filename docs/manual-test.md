@@ -33,3 +33,14 @@ Needs a second display.
 | D4 | Change one display's resolution or arrangement in System Settings | The paw stays on the cursor afterwards |
 | D5 | Mix a Retina and a non-Retina display | The paw is crisp on both |
 | D6 | Open a full-screen app on one display, and Mission Control | The paw stays visible above both |
+
+## Tracking and CPU
+
+| # | Do | Expect |
+|---|---|---|
+| T1 | Swing the mouse fast in circles on a 120 Hz (ProMotion) display | The paw stays glued to the cursor, with no visible trailing |
+| T2 | Record the screen at 120 fps (QuickTime) while moving fast and step through frames | The paw tip is within one frame of the click point |
+| T3 | Leave the mouse still for 10 s; Activity Monitor → CPU for MacCursor | Under 1% (measured 0.05% on an M-series Mac, 2026-11-15) |
+| T4 | Keep moving the mouse; check CPU | Under 10% of one core |
+| T5 | Click fast for a few seconds | Click effects animate smoothly, and the paw doesn't freeze after you stop |
+| T6 | Leave it still for a minute, then move | The paw follows immediately (no wake-up delay) |

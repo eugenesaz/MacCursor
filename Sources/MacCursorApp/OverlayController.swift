@@ -11,8 +11,12 @@ final class Overlay {
     let backingScale: CGFloat
     private let effectsLayer = CALayer()
     private var effects: [ClickEffect] = []
+    private var displayLink: CADisplayLink?
+    private var lastPose: (mouse: CGPoint, active: Bool, scale: CGFloat, squash: CGFloat)?
+    private var idleFrames = 0
 
-    init(screen: NSScreen) {
+    /// `onFrame` runs once per refresh of this overlay's display (up to 120 Hz on ProMotion).
+    init(screen: NSScreen, onFrame: @escaping (Overlay) -> Void) {
         frame = screen.frame
         backingScale = screen.backingScaleFactor
         window = NSPanel(
@@ -38,6 +42,12 @@ final class Overlay {
         view.layer!.addSublayer(effectsLayer)
         view.layer!.addSublayer(rig.root)
         window.orderFrontRegardless()
+
+        let target = FrameTarget()
+        let link = screen.displayLink(target: target, selector: #selector(FrameTarget.frame))
+        target.onFrame = { [unowned self] in onFrame(self) }
+        link.add(to: .main, forMode: .common)
+        displayLink = link
     }
 
     func local(_ p: CGPoint) -> CGPoint { DisplayLayout.local(p, in: frame) }
@@ -50,6 +60,20 @@ final class Overlay {
     func update(
         mouse: CGPoint, active: Bool, now: CFTimeInterval, scale: CGFloat, squash: CGFloat
     ) {
+        // Nothing moved and nothing is animating: skip the frame (keeps idle CPU near zero).
+        if effects.isEmpty, let last = lastPose, last.mouse == mouse, last.active == active,
+            last.scale == scale, last.squash == squash
+        {
+            // Still for a quarter second: stop the display link until `wake()`.
+            idleFrames += 1
+            if idleFrames > 30 { displayLink?.isPaused = true }
+            return
+        }
+        idleFrames = 0
+        lastPose = (mouse, active, scale, squash)
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        defer { CATransaction.commit() }
         rig.root.isHidden = !active
         if active {
             let p = local(mouse)
@@ -68,19 +92,40 @@ final class Overlay {
             intensity: intensity, scale: scale, contentsScale: backingScale, start: now)
         effectsLayer.addSublayer(fx.layer)
         effects.append(fx)
+        wake()
+    }
+
+    /// Forces the next frame to redraw (after a style change).
+    func invalidatePose() {
+        lastPose = nil
+        wake()
+    }
+
+    /// Resumes per-frame updates after the pointer moves or something starts animating.
+    func wake() {
+        idleFrames = 0
+        displayLink?.isPaused = false
     }
 
     func close() {
+        displayLink?.invalidate()
+        displayLink = nil
         window.orderOut(nil)
         window.close()
     }
+}
+
+/// CADisplayLink needs an Objective-C target.
+private final class FrameTarget: NSObject {
+    var onFrame: (() -> Void)?
+    @objc func frame() { onFrame?() }
 }
 
 final class OverlayController {
     private var overlays: [Overlay] = []
     private var layout = DisplayLayout(frames: [])
     private var pendingRebuild: DispatchWorkItem?
-    private var timer: Timer?
+    private var appearanceTimer: Timer?
     private var monitors: [Any] = []
     private var clickTimes: [CFTimeInterval] = []
     private var lastClick: CFTimeInterval = -10
@@ -88,7 +133,6 @@ final class OverlayController {
     private var art = Skins.art(for: .dogPaw)
     private var palette = Palette.forLightScreens
     private var lastSystemDark = false
-    private var tickCount = 0
     private let settings = Settings.shared
     let presentation = PresentationMode()
     private(set) var isEnabled = false
@@ -109,9 +153,29 @@ final class OverlayController {
         isEnabled = on
         if on {
             rebuild()
-            let t = Timer(timeInterval: 1.0 / 120, repeats: true) { [weak self] _ in self?.tick() }
+            // Auto color: notice system light/dark switches twice a second.
+            let t = Timer(timeInterval: 0.5, repeats: true) { [weak self] _ in
+                self?.checkAppearance()
+            }
             RunLoop.main.add(t, forMode: .common)
-            timer = t
+            appearanceTimer = t
+            let moves: NSEvent.EventTypeMask = [
+                .mouseMoved, .leftMouseDragged, .rightMouseDragged, .otherMouseDragged,
+            ]
+            if let g = NSEvent.addGlobalMonitorForEvents(
+                matching: moves, handler: { [weak self] _ in self?.wakeOverlays() })
+            {
+                monitors.append(g)
+            }
+            if let l = NSEvent.addLocalMonitorForEvents(
+                matching: moves,
+                handler: { [weak self] e in
+                    self?.wakeOverlays()
+                    return e
+                })
+            {
+                monitors.append(l)
+            }
             let mask: NSEvent.EventTypeMask = [.leftMouseDown, .rightMouseDown, .otherMouseDown]
             if let g = NSEvent.addGlobalMonitorForEvents(
                 matching: mask, handler: { [weak self] _ in self?.handleClick() })
@@ -128,8 +192,8 @@ final class OverlayController {
                 monitors.append(l)
             }
         } else {
-            timer?.invalidate()
-            timer = nil
+            appearanceTimer?.invalidate()
+            appearanceTimer = nil
             monitors.forEach(NSEvent.removeMonitor)
             monitors.removeAll()
             for overlay in overlays { overlay.close() }
@@ -145,7 +209,10 @@ final class OverlayController {
         art = Skins.art(for: settings.pointer.style)
         palette = settings.resolvedPalette()
         lastSystemDark = Settings.systemIsDark()
-        for overlay in overlays { overlay.rig.apply(art: art, palette: palette) }
+        for overlay in overlays {
+            overlay.rig.apply(art: art, palette: palette)
+            overlay.invalidatePose()
+        }
         updateCursorVisibility()
     }
 
@@ -173,36 +240,36 @@ final class OverlayController {
 
     private func rebuild() {
         for overlay in overlays { overlay.close() }
-        overlays = NSScreen.screens.map(Overlay.init)
+        overlays = NSScreen.screens.map { screen in
+            Overlay(screen: screen) { [weak self] overlay in self?.frame(for: overlay) }
+        }
         layout = DisplayLayout(frames: overlays.map(\.frame))
         refreshStyle()
         log("overlays: \(overlays.count) display(s)")
     }
 
-    private func tick() {
-        let now = CACurrentMediaTime()
-        tickCount += 1
-        // Auto color: notice system light/dark switches (~twice a second).
-        if tickCount % 60 == 0, settings.pointer.colorMode == .auto,
-            Settings.systemIsDark() != lastSystemDark
-        {
+    private func wakeOverlays() {
+        for overlay in overlays { overlay.wake() }
+    }
+
+    private func checkAppearance() {
+        if settings.pointer.colorMode == .auto, Settings.systemIsDark() != lastSystemDark {
             refreshStyle()
         }
+    }
+
+    /// One display refresh for one overlay.
+    private func frame(for overlay: Overlay) {
+        let now = CACurrentMediaTime()
         let mood = settings.mood
         let t = now - lastClick
         let squash =
             art.isRing
             ? 0 : t < 0.2 ? CGFloat(sin(.pi * t / 0.2)) * min(1, 0.6 + 0.2 * lastIntensity) : 0
         let mouse = NSEvent.mouseLocation
-        CATransaction.begin()
-        CATransaction.setDisableActions(true)
-        let active = activeOverlay(for: mouse)
-        for overlay in overlays {
-            overlay.update(
-                mouse: mouse, active: overlay === active, now: now,
-                scale: mood.scale, squash: squash)
-        }
-        CATransaction.commit()
+        overlay.update(
+            mouse: mouse, active: overlay === activeOverlay(for: mouse), now: now,
+            scale: mood.scale, squash: squash)
     }
 
     private func handleClick() {

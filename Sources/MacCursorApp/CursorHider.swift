@@ -163,7 +163,9 @@ final class SkyLightCursorHider: CursorHiding {
             lock.unlock()
         }
 
-        /// Polls fast right after a change (pointer moving), slower when idle.
+        /// Polls fast right after a change (pointer moving), slower when idle. Pointer
+        /// events also re-apply right away (see `hide()`), so the idle poll only catches
+        /// changes without movement, such as switching apps from the keyboard.
         func run() {
             var quiet = 0
             while true {
@@ -178,7 +180,7 @@ final class SkyLightCursorHider: CursorHiding {
                 } else {
                     quiet = min(quiet + 1, 601)
                 }
-                usleep(quiet > 600 ? 4000 : 400)
+                usleep(quiet > 600 ? 16_000 : 400)
             }
         }
     }

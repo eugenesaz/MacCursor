@@ -2,15 +2,8 @@ import AppKit
 import MacCursorCore
 import MacCursorRender
 
-// `MacCursor --render <dir>` renders every built-in style × palette × state to PNGs
-// (no permissions needed).
-let args = CommandLine.arguments
-if let i = args.firstIndex(of: "--render"), i + 1 < args.count {
-    let library = StyleLibrary.load(
-        builtinDirectory: StyleStore.builtinDirectory, userDirectory: nil)
-    SnapshotRenderer.run(directory: args[i + 1], packs: library.builtins)
-    exit(0)
-}
+// Command-line tools (`--validate`, `--render`, …) run and exit without starting the app.
+if let status = Tools.run(CommandLine.arguments) { exit(status) }
 
 let app = NSApplication.shared
 let delegate = AppDelegate()

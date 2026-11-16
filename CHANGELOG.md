@@ -3,7 +3,7 @@
 Notes for each release, written for people using MacCursor. The newest version is at the top.
 The section for a version is what the update dialog shows.
 
-## [Unreleased]
+## [0.4.0] - 2026-11-16
 
 - **Draw on screen** to point things out while presenting:
   - hold **⌘** and move the mouse to draw a line that fades away after a few seconds;

@@ -11,13 +11,20 @@ import Testing
         #expect(!art.silhouette.boundingBoxOfPath.isEmpty)
     }
 
-    /// The tip of the art is the click point: the top edge of the silhouette sits at y = 0,
-    /// centered on x = 0, within 1 pt.
+    /// The click point is the top center of the art: the highest point of the silhouette is
+    /// at y = 0 within 1 pt, nothing is drawn above it, and the art is solid just below it.
+    /// (Paws click between the two middle toes, so their notch leaves up to 6 pt there.)
     @Test(arguments: PointerStyle.allCases.filter { !$0.keepsSystemCursor })
     func tipIsTheHotspot(style: PointerStyle) {
-        let box = Skins.art(for: style).silhouette.boundingBoxOfPath
-        #expect(abs(box.maxY) <= 1)
-        #expect(abs(box.midX) <= 1)
+        let path = Skins.art(for: style).silhouette
+        #expect(abs(path.boundingBoxOfPath.maxY) <= 1)
+        #expect(!path.contains(CGPoint(x: 0, y: 1.5)))
+        #expect(path.contains(CGPoint(x: 0, y: -6)))
+    }
+
+    @Test func fingerTipIsExact() {
+        let path = Skins.art(for: .finger).silhouette
+        #expect(path.contains(CGPoint(x: 0, y: -1)))
     }
 
     @Test func ringIsCenteredOnTheHotspot() {

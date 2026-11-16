@@ -8,12 +8,13 @@ public protocol SettingsStore: AnyObject {
 
 /// The pointer styles. The art for each lives in MacCursorRender.
 public enum PointerStyle: String, CaseIterable, Sendable {
-    case dogPaw, catPaw, ring
+    case dogPaw, catPaw, finger, ring
 
     public var title: String {
         switch self {
         case .dogPaw: return "Dog paw"
         case .catPaw: return "Cat paw"
+        case .finger: return "Pointing finger"
         case .ring: return "Highlight ring"
         }
     }

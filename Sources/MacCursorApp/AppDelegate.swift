@@ -12,6 +12,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var pointer: PointerController { controller }
     private let settings = Settings.shared
     private let updater = Updater()
+    private var menuIsOpen = false
     private lazy var installer = StyleInstaller(
         select: { [weak self] id in self?.pointer.styleID = id },
         showProblems: { [weak self] title, message, lines in
@@ -41,6 +42,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             [weak self] in
             self?.nextInkColor()
         }
+        controller.presentation.letsPressThrough = { [weak self] p in
+            guard let self else { return false }
+            return self.menuIsOpen || self.statusItemFrame?.contains(p) == true
+        }
+        controller.presentation.onHoldToExit = { [weak self] in self?.setPresentation(false) }
         StyleStore.shared.onChange = { [weak self] in self?.controller.refreshStyle() }
         StyleStore.shared.start()
         pointer.setEnabled(true)
@@ -53,16 +59,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     // MARK: Actions
 
     @objc private func togglePointer() {
+        let wasPresenting = controller.presentation.isOn
         pointer.setEnabled(!pointer.isEnabled)
+        if wasPresenting && !controller.presentation.isOn { showPresentationOff() }
         updateIcon()
     }
 
     @objc private func togglePresentation() {
-        if controller.presentation.isOn {
-            controller.presentation.disable()
-        } else {
+        setPresentation(!controller.presentation.isOn)
+    }
+
+    private static let presentationExitHint = "Press ⌃⌥T or hold a click for 2 seconds to exit"
+
+    private func setPresentation(_ on: Bool) {
+        guard on != controller.presentation.isOn else { return }
+        if on {
             if !pointer.isEnabled { pointer.setEnabled(true) }
-            if !controller.presentation.enable() {
+            if controller.presentation.enable() {
+                Toast.shared.show("Presentation mode on", detail: Self.presentationExitHint)
+            } else {
                 let alert = NSAlert()
                 alert.messageText = "Presentation mode needs Accessibility access"
                 alert.informativeText =
@@ -70,8 +85,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 NSApp.activate(ignoringOtherApps: true)
                 alert.runModal()
             }
+        } else {
+            controller.presentation.disable()
+            showPresentationOff()
         }
         updateIcon()
+    }
+
+    private func showPresentationOff() {
+        Toast.shared.show("Presentation mode off", seconds: 1.5)
+    }
+
+    /// The menu bar icon's frame in AppKit screen coordinates.
+    private var statusItemFrame: CGRect? {
+        guard let button = statusItem.button, let window = button.window else { return nil }
+        return window.convertToScreen(button.convert(button.bounds, to: nil))
     }
 
     @objc private func pickSkin(_ sender: NSMenuItem) {
@@ -202,6 +230,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     // MARK: Menu
 
+    func menuWillOpen(_ menu: NSMenu) { menuIsOpen = true }
+    func menuDidClose(_ menu: NSMenu) { menuIsOpen = false }
+
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
 
@@ -211,6 +242,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let pres = item("Presentation mode", #selector(togglePresentation), key: "t")
         pres.state = controller.presentation.isOn ? .on : .off
         menu.addItem(pres)
+        if controller.presentation.isOn {
+            let hint = NSMenuItem(
+                title: "Clicks don't reach apps. \(Self.presentationExitHint).",
+                action: nil, keyEquivalent: "")
+            hint.isEnabled = false
+            hint.indentationLevel = 1
+            menu.addItem(hint)
+        }
 
         menu.addItem(.separator())
         menu.addItem(header("Style"))

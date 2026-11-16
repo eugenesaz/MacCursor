@@ -48,6 +48,18 @@ Needs a second display.
 | D14 | Draw 20 lasting lines, then move the pointer around; leave the mouse still 10 s | Pointer motion stays smooth; CPU under 1% when still |
 | D15 | Share the screen (Zoom/Meet) and record with QuickTime while drawing | Lines show in both |
 
+## Presentation mode (#42)
+
+| # | Do | Expect |
+|---|---|---|
+| T1 | Turn Presentation mode on from the menu | A notice near the bottom of the screen: on, and how to exit; it fades after about 3 s |
+| T2 | With it on, click the menu bar icon and untick Presentation mode | The menu opens and works; a "Presentation mode off" notice shows; clicks reach apps again |
+| T3 | With it on, open the menu | A greyed line under Presentation mode explains how to exit |
+| T4 | With it on, press and hold a click still for 2 s anywhere | The mode turns off with the "off" notice; nothing underneath was clicked |
+| T5 | With it on, hold a click and move more than a few points, or let go before 2 s | The mode stays on |
+| T6 | With it on, press ⌃⌥T; then ⌃⌥P | ⌃⌥T turns it off with the notice; ⌃⌥P (pointer off) also ends it, with the notice |
+| T7 | Turn it on during a full-screen Keynote slide show | The notice shows over the slides |
+
 ## Screen sharing
 
 | # | Do | Expect |

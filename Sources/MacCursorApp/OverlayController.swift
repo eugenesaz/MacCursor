@@ -248,7 +248,11 @@ final class OverlayController {
         log("overlays: \(overlays.count) display(s)")
     }
 
-    private func wakeOverlays() {
+    /// Pointer scale: the size setting (the mood no longer scales the pointer).
+    private var size: CGFloat { CGFloat(settings.pointer.size) }
+
+    /// Redraws on the next frame, e.g. after the size changed.
+    func wakeOverlays() {
         for overlay in overlays { overlay.wake() }
     }
 
@@ -261,7 +265,6 @@ final class OverlayController {
     /// One display refresh for one overlay.
     private func frame(for overlay: Overlay) {
         let now = CACurrentMediaTime()
-        let mood = settings.mood
         let t = now - lastClick
         let squash =
             art.isRing
@@ -269,7 +272,7 @@ final class OverlayController {
         let mouse = NSEvent.mouseLocation
         overlay.update(
             mouse: mouse, active: overlay === activeOverlay(for: mouse), now: now,
-            scale: mood.scale, squash: squash)
+            scale: size, squash: squash)
     }
 
     private func handleClick() {
@@ -285,7 +288,7 @@ final class OverlayController {
         CATransaction.setDisableActions(true)
         activeOverlay(for: mouse)?
             .addEffect(
-                at: mouse, art: art, palette: palette, intensity: lastIntensity, scale: mood.scale,
+                at: mouse, art: art, palette: palette, intensity: lastIntensity, scale: size,
                 now: now)
         CATransaction.commit()
         if settings.sound, let s = NSSound(named: "Pop")?.copy() as? NSSound {

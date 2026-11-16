@@ -68,6 +68,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         controller.refreshStyle()
     }
 
+    @objc private func sizeChanged(_ sender: NSSlider) {
+        settings.pointer.size = sender.doubleValue
+        controller.wakeOverlays()
+    }
+
     @objc private func toggleSound() { settings.sound.toggle() }
 
     @objc private func toggleHideCursor() {
@@ -104,6 +109,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             i.state = settings.pointer.style == kind ? .on : .off
             menu.addItem(i)
         }
+
+        menu.addItem(header("Size"))
+        menu.addItem(sizeSliderItem())
 
         menu.addItem(header("Mood"))
         for mood in Mood.allCases {
@@ -144,6 +152,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if !key.isEmpty { i.keyEquivalentModifierMask = [.control, .option] }
         i.target = self
         return i
+    }
+
+    private func sizeSliderItem() -> NSMenuItem {
+        let range = PointerSettings.sizeRange
+        let slider = NSSlider(
+            value: settings.pointer.size, minValue: range.lowerBound, maxValue: range.upperBound,
+            target: self, action: #selector(sizeChanged(_:)))
+        slider.isContinuous = true
+        slider.frame = NSRect(x: 20, y: 4, width: 180, height: 22)
+        slider.setAccessibilityLabel("Pointer size")
+        let view = NSView(frame: NSRect(x: 0, y: 0, width: 220, height: 30))
+        view.addSubview(slider)
+        let item = NSMenuItem()
+        item.view = view
+        return item
     }
 
     private func header(_ title: String) -> NSMenuItem {

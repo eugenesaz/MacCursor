@@ -44,3 +44,11 @@ Needs a second display.
 | T4 | Keep moving the mouse; check CPU | Under 10% of one core |
 | T5 | Click fast for a few seconds | Click effects animate smoothly, and the paw doesn't freeze after you stop |
 | T6 | Leave it still for a minute, then move | The paw follows immediately (no wake-up delay) |
+
+## Look: size, color, styles
+
+| # | Do | Expect |
+|---|---|---|
+| L1 | First launch (run `defaults delete io.github.eugenesaz.maccursor` first) | The paw is clearly smaller than the old proof of concept (0.75×) |
+| L2 | Drag the Size slider in the menu from end to end | The paw resizes live, from small to large, with no flicker |
+| L3 | Quit and relaunch | The size is kept |

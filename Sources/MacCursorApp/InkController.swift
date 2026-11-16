@@ -2,46 +2,58 @@ import AppKit
 import MacCursorCore
 import QuartzCore
 
-/// Draws ink while ⌘ (fading) or ⌘⌥ (lasting) is held and the mouse moves. Input is polled,
-/// so no Accessibility permission is needed. The lines live in each overlay's `inkLayer`.
+/// Draws ink while the mouse button is held with ⌘ (fading) or ⌘⌥ (lasting). An event tap
+/// keeps those presses, drags and releases from the app underneath, so it needs the
+/// Accessibility permission. The lines live in each overlay's `inkLayer`.
 @MainActor
 final class InkController {
+    static let maxLasting = 200
+
     private let settings: DrawSettings
-    private var trigger = InkTrigger()
+    private var gesture = InkGesture()
     private var current: (stroke: InkStroke, layer: CAShapeLayer, mode: InkMode, overlay: Overlay)?
     private var lasting: [CAShapeLayer] = []
-    static let maxLasting = 200
+    private var tap: CFMachPort?
+    private var source: CFRunLoopSource?
+    private var retry: Timer?
+
+    /// The overlay to draw on at a point (AppKit global coordinates); nil where drawing isn't
+    /// possible (no display there, screen locked).
+    var overlayAt: (CGPoint) -> Overlay? = { _ in nil }
+    /// Runs while drawing: claimed drags don't reach the pointer's motion monitors.
+    var onDraw: () -> Void = {}
 
     init(settings: DrawSettings) { self.settings = settings }
 
-    /// Call on every mouse move and on the backstop timer. `overlay`: the display under the
-    /// mouse; nil when there is none or drawing isn't possible (pointer off, screen locked).
-    func tick(mouse: CGPoint, overlay: Overlay?, overlays: [Overlay]) {
-        let polled = trigger.update(
-            keys: Self.heldKeys(), buttonDown: Self.buttonDown(),
-            keyDownCount: CGEventSource.counterForEventType(
-                .combinedSessionState, eventType: .keyDown))
-        let mode = settings.isOn && overlay != nil ? polled : nil
+    /// The event tap is in place, so ⌘-drags draw.
+    var isReady: Bool { tap != nil }
+    var isDrawing: Bool { gesture.isActive }
 
-        if let c = current, !overlays.contains(where: { $0 === c.overlay }) {
-            current = nil  // its display went away, and the line with it
-        }
-        if let c = current, c.mode != mode || c.stroke.isFull {
+    /// Starts or stops listening. Without Accessibility it retries every 2 s, so granting the
+    /// permission takes effect without a relaunch.
+    func setActive(_ on: Bool) {
+        if on {
+            installTap()
+        } else {
+            removeTap()
+            gesture = InkGesture()
             endStroke()
-            if c.mode == mode, let mode {
-                // Full: carry on as a new line from the same point.
-                startStroke(mode: mode, at: c.stroke.last, on: c.overlay)
-            }
         }
-        guard let mode, let overlay else { return }
-        if current == nil {
-            startStroke(mode: mode, at: overlay.local(mouse), on: overlay)
-        } else if var c = current, c.stroke.add(c.overlay.local(mouse)) {
-            current = c
-            CATransaction.begin()
-            CATransaction.setDisableActions(true)
-            c.layer.path = c.stroke.path
-            CATransaction.commit()
+    }
+
+    /// Whether a press with these keys draws instead of reaching apps.
+    func claimsClick(keys: HeldKeys) -> Bool {
+        isDrawing || (isReady && InkMode(keys: keys) != nil)
+    }
+
+    /// For Presentation Mode, which swallows clicks: the events drawing needs to see.
+    func wants(_ type: CGEventType, _ event: CGEvent) -> Bool {
+        switch type {
+        case .leftMouseDown:
+            return isReady && InkMode(keys: HeldKeys(event.flags)) != nil
+                && overlayAt(Self.appKitPoint(event.location)) != nil
+        case .leftMouseUp: return isDrawing
+        default: return false
         }
     }
 
@@ -53,6 +65,56 @@ final class InkController {
             for layer in overlay.inkLayer.sublayers ?? [] { layer.removeFromSuperlayer() }
         }
     }
+
+    // MARK: Events
+
+    /// Returns true to keep the event from the app underneath.
+    private func handle(_ type: CGEventType, _ event: CGEvent) -> Bool {
+        switch type {
+        case .tapDisabledByTimeout, .tapDisabledByUserInput:
+            if let tap { CGEvent.tapEnable(tap: tap, enable: true) }
+            return false
+        case .leftMouseDown:
+            let p = Self.appKitPoint(event.location)
+            guard settings.isOn, let overlay = overlayAt(p),
+                let mode = gesture.down(keys: HeldKeys(event.flags))
+            else { return false }
+            endStroke()
+            startStroke(mode: mode, at: overlay.local(p), on: overlay)
+            onDraw()
+            return true
+        case .leftMouseDragged:
+            guard gesture.isActive else { return false }
+            draw(
+                mode: gesture.drag(keys: HeldKeys(event.flags)),
+                at: Self.appKitPoint(event.location))
+            onDraw()
+            return true
+        case .leftMouseUp:
+            guard gesture.up() else { return false }
+            endStroke()
+            onDraw()
+            return true
+        default:
+            return false
+        }
+    }
+
+    private func draw(mode: InkMode?, at p: CGPoint) {
+        if let c = current, c.mode != mode || c.stroke.isFull {
+            endStroke()
+            // ⌥ switched or the line is full: carry on as a new line from the same point.
+            if let mode { startStroke(mode: mode, at: c.stroke.last, on: c.overlay) }
+        }
+        guard var c = current, c.stroke.add(c.overlay.local(p)) else { return }
+        current = c
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        c.layer.path = c.stroke.path
+        CATransaction.commit()
+    }
+
+    // MARK: Strokes
 
     private func startStroke(mode: InkMode, at p: CGPoint, on overlay: Overlay) {
         let stroke = InkStroke(start: p)
@@ -107,20 +169,74 @@ final class InkController {
         }
     }
 
-    private static func heldKeys() -> HeldKeys {
-        let flags = CGEventSource.flagsState(.combinedSessionState)
-        var keys: HeldKeys = []
-        if flags.contains(.maskCommand) { keys.insert(.command) }
-        if flags.contains(.maskAlternate) { keys.insert(.option) }
-        if flags.contains(.maskControl) { keys.insert(.control) }
-        if flags.contains(.maskShift) { keys.insert(.shift) }
-        if flags.contains(.maskSecondaryFn) { keys.insert(.function) }
-        return keys
+    // MARK: Event tap
+
+    private func installTap() {
+        guard tap == nil else { return }
+        guard PresentationMode.hasAccessibility(prompt: false) else {
+            scheduleRetry()
+            return
+        }
+        let types: [CGEventType] = [.leftMouseDown, .leftMouseDragged, .leftMouseUp]
+        let mask = types.reduce(CGEventMask(0)) { $0 | (CGEventMask(1) << $1.rawValue) }
+        guard
+            let tap = CGEvent.tapCreate(
+                tap: .cgSessionEventTap, place: .headInsertEventTap, options: .defaultTap,
+                eventsOfInterest: mask,
+                callback: { _, type, event, refcon in
+                    let ink = Unmanaged<InkController>.fromOpaque(refcon!).takeUnretainedValue()
+                    // The tap runs on the main run loop.
+                    let swallow = MainActor.assumeIsolated { ink.handle(type, event) }
+                    return swallow ? nil : Unmanaged.passUnretained(event)
+                },
+                userInfo: Unmanaged.passUnretained(self).toOpaque())
+        else {
+            log("draw: tapCreate failed")
+            scheduleRetry()
+            return
+        }
+        retry?.invalidate()
+        retry = nil
+        self.tap = tap
+        source = CFMachPortCreateRunLoopSource(nil, tap, 0)
+        CFRunLoopAddSource(CFRunLoopGetMain(), source, .commonModes)
+        CGEvent.tapEnable(tap: tap, enable: true)
+        log("draw: ready")
     }
 
-    private static func buttonDown() -> Bool {
-        [CGMouseButton.left, .right, .center].contains {
-            CGEventSource.buttonState(.combinedSessionState, button: $0)
+    private func scheduleRetry() {
+        guard retry == nil else { return }
+        let t = Timer(timeInterval: 2, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated { self?.installTap() }
         }
+        RunLoop.main.add(t, forMode: .common)
+        retry = t
+    }
+
+    private func removeTap() {
+        retry?.invalidate()
+        retry = nil
+        guard let tap else { return }
+        CGEvent.tapEnable(tap: tap, enable: false)
+        if let source { CFRunLoopRemoveSource(CFRunLoopGetMain(), source, .commonModes) }
+        CFMachPortInvalidate(tap)
+        self.tap = nil
+        source = nil
+    }
+
+    /// Event-tap locations have their origin at the top left of the main display, y down.
+    private static func appKitPoint(_ p: CGPoint) -> CGPoint {
+        CGPoint(x: p.x, y: (NSScreen.screens.first?.frame.maxY ?? 0) - p.y)
+    }
+}
+
+extension HeldKeys {
+    init(_ flags: CGEventFlags) {
+        self = []
+        if flags.contains(.maskCommand) { insert(.command) }
+        if flags.contains(.maskAlternate) { insert(.option) }
+        if flags.contains(.maskControl) { insert(.control) }
+        if flags.contains(.maskShift) { insert(.shift) }
+        if flags.contains(.maskSecondaryFn) { insert(.function) }
     }
 }

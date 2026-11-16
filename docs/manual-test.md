@@ -30,77 +30,22 @@ Needs a second display.
 
 | # | Do | Expect |
 |---|---|---|
-| D1 | Move the pointer slowly across the border between displays, in both directions | The paw jumps across with no gap and never shows twice |
-| D2 | Click at each corner of each display | The click lands exactly under the paw's tip |
-| D3 | Unplug the second display, then plug it back in | Within a second the paw works on both; no leftover windows (check Mission Control) |
-| D4 | Change one display's resolution or arrangement in System Settings | The paw stays on the cursor afterwards |
-| D5 | Mix a Retina and a non-Retina display | The paw is crisp on both |
-| D6 | Open a full-screen app on one display, and Mission Control | The paw stays visible above both |
-
-## Tracking and CPU
-
-| # | Do | Expect |
-|---|---|---|
-| T1 | Swing the mouse fast in circles on a 120 Hz (ProMotion) display | The paw stays glued to the cursor, with no visible trailing |
-| T2 | Record the screen at 120 fps (QuickTime) while moving fast and step through frames | The paw tip is within one frame of the click point |
-| T3 | Leave the mouse still for 10 s; Activity Monitor → CPU for MacCursor | Under 1% (measured about 0.1% on an M-series Mac, 2026-11-15) |
-| T4 | Keep moving the mouse; check CPU | Under 10% of one core |
-| T5 | Click fast for a few seconds | Click effects animate smoothly, and the paw doesn't freeze after you stop |
-| T6 | Leave it still for a minute, then move | The paw follows immediately (no wake-up delay) |
-
-## Look: size, color, styles
-
-| # | Do | Expect |
-|---|---|---|
-| L1 | First launch (run `defaults delete io.github.eugenesaz.maccursor` first) | The paw is clearly smaller than the old proof of concept (0.75×) |
-| L2 | Drag the Size slider in the menu from end to end | The paw resizes live, from small to large, with no flicker |
-| L3 | Quit and relaunch | The size is kept |
-| L4 | Color: Auto. Switch System Settings → Appearance between Light and Dark | The paw's outline flips (dark on light, light on dark) within a second |
-| L5 | Color: Dark, then Light, with either system appearance | The outline stays dark, or light, as picked |
-| L6 | Try each style on a light page and on a dark editor | Each one reads clearly on both |
-| L7 | Drag the Tail slider in the menu from end to end, with a paw and with the hand | The tail shortens and grows live with no flicker; far left shows just the paw or hand with a closed outline; far right matches the full length |
-| L8 | Set a short tail, quit and relaunch | The tail length is kept |
-| L9 | Set a short tail, switch to Highlight ring, then back to a paw | The ring has no tail; the paw comes back with the same short tail |
-
-To review the art without running the app: `build/MacCursor.app/Contents/MacOS/MacCursor --render build/snapshots`
-writes every style × palette × size, plus each paw and the hand with no tail and a short
-tail, as a PNG (the same images the snapshot tests compare).
-
-## Click sound
-Start from defaults (`defaults delete io.github.eugenesaz.maccursor`), or note your old settings.
-
-| # | Do | Expect |
-|---|---|---|
-| C1 | Click a few times with the default settings | A soft "tap", clearly quieter than the old Pop |
-| C2 | Click sound ▸ drag the Volume slider from end to end | A preview plays as you drag, getting louder to the right; far left is silent |
-| C3 | Pick each of Tap, Tick, Knock, Boop and Pop | Each plays once when picked, then on every click; all sound about equally loud |
-| C4 | Click 10 times as fast as you can | The clicks get softer and never stack into a rattle |
-| C5 | Turn off "Quieter when clicking fast", repeat C4 | Every click is the same level, still no pile-up |
-| C6 | Mood: Subtle, then Wild, with "Follow mood" on | Subtle is softer and lower, Wild is brighter but not louder |
-| C7 | Turn off "Play click sound", click; then pick a sound | Clicks are silent; picking a sound still plays a preview |
-| C8 | Change several sound settings, quit and relaunch | All of them are kept |
-| C9 | Plug in or unplug headphones (or switch output in Control Center), then click | The sound plays on the new output |
-| C10 | Click, then leave the mouse still for 10 s; check CPU (Activity Monitor) | Under 1%, as T3 (the audio engine pauses after 5 s) |
-| C11 | Turn the pointer off (⌃⌥P) and click | No sound |
-| C12 | Share the screen with "share system audio" (Zoom/Meet) and click | The viewer hears the click |
-
-## Drawing (`SPEC-draw.md`, #31)
-
-| # | Do | Expect |
-|---|---|---|
-| D1 | Hold ⌘ and move the mouse in a circle, then let go | A smooth red line follows the pointer's tip, under the pointer; about 3 s after letting go it fades out |
-| D2 | Hold ⌘⌥ and draw, wait 10 s | The line stays |
+| D0 | Without Accessibility granted, open the Draw menu and choose Allow Drawing…; grant it | System Settings opens; within 2 s drawing works, no relaunch |
+| D1 | Hold ⌘ and drag in a circle, then let go | A smooth red line follows the pointer's tip, under the pointer; about 3 s after letting go it fades out |
+| D2 | Hold ⌘⌥ and drag, wait 10 s | The line stays |
 | D3 | Press ⌃⌥X (or Draw ▸ Clear drawing) | Every line is gone, on every display |
-| D4 | While drawing with ⌘, press and release ⌥ | The line switches between fading and lasting at that point |
+| D4 | While dragging with ⌘, press and release ⌥ | The line switches between fading and lasting at that point |
 | D5 | Press ⌃⌥C a few times between lines; pick a color, Thick, and 10 s in the menu | Each new line uses the new color / thickness / fade time; existing lines keep theirs |
-| D6 | Press ⌘C, ⌘-Tab (moving the mouse in the switcher), ⌘-click a link, holding ⌘ afterwards and moving | Nothing is drawn until ⌘ is released and held again |
-| D7 | Hold ⌘⇧ or ⌃⌘ and move | Nothing is drawn |
-| D8 | Draw over a Keynote/PowerPoint slide in play mode | The slide doesn't advance; nothing is clicked or selected |
-| D9 | Draw on the second display; start a line on one display and cross to the other | Works there; the crossing line is cut off at the edge |
-| D10 | Turn off Draw ▸ Draw on screen and hold ⌘ while moving | Nothing is drawn; existing lines were cleared |
-| D11 | Change the draw settings, quit and relaunch | They are kept |
-| D12 | Draw 20 lasting lines, then move the pointer around; leave the mouse still 10 s | Pointer motion stays smooth; CPU under 1% when still |
-| D13 | Share the screen (Zoom/Meet) and record with QuickTime while drawing | Lines show in both |
+| D6 | Hold ⌘ or ⌘⌥ and move without clicking; use ⌘C, ⌘-Tab | Nothing is drawn |
+| D7 | ⌘-drag over Finder icons, a browser link and a window title bar | Nothing is selected, opened or moved; no click effect or sound |
+| D8 | Hold ⌘⇧ or ⌃⌘ and click | A normal click (not drawn, reaches the app) |
+| D9 | During a ⌘-drag, let go of ⌘ but keep the button down, then release | The line ends; the release doesn't click anything |
+| D10 | Draw over a Keynote/PowerPoint slide in play mode, with Presentation mode on and off | The slide doesn't advance; drawing works in both |
+| D11 | Draw on the second display; start a line on one display and cross to the other | Works there; the crossing line is cut off at the edge |
+| D12 | Turn off Draw ▸ Draw on screen and ⌘-click | A normal ⌘-click; existing lines were cleared |
+| D13 | Change the draw settings, quit and relaunch | They are kept |
+| D14 | Draw 20 lasting lines, then move the pointer around; leave the mouse still 10 s | Pointer motion stays smooth; CPU under 1% when still |
+| D15 | Share the screen (Zoom/Meet) and record with QuickTime while drawing | Lines show in both |
 
 ## Screen sharing
 

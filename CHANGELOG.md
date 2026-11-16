@@ -3,6 +3,14 @@
 Notes for each release, written for people using MacCursor. The newest version is at the top.
 The section for a version is what the update dialog shows.
 
+## [0.4.1] - 2026-11-16
+
+- Drawing now needs a click: hold **⌘** (fading line) or **⌘⌥** (lasting line) and **drag**.
+  Just holding ⌘ and moving the mouse no longer leaves stray lines.
+- The drag is kept from the app underneath, so nothing gets clicked, selected or moved. This
+  uses the Accessibility permission (the same one Presentation mode uses); if it's missing,
+  **Draw ▸ Allow Drawing in Accessibility Settings…** takes you there.
+
 ## [0.4.0] - 2026-11-16
 
 - **Draw on screen** to point things out while presenting:

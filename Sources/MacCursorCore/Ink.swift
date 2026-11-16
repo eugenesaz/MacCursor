@@ -5,6 +5,15 @@ public enum InkMode: Sendable {
     case fading
     /// Stays until cleared.
     case lasting
+
+    /// Exactly ⌘ → fading, exactly ⌘⌥ → lasting; any other combination doesn't draw.
+    public init?(keys: HeldKeys) {
+        switch keys {
+        case [.command]: self = .fading
+        case [.command, .option]: self = .lasting
+        default: return nil
+        }
+    }
 }
 
 /// The modifier keys that matter for drawing.
@@ -19,39 +28,39 @@ public struct HeldKeys: OptionSet, Sendable {
     public static let function = HeldKeys(rawValue: 1 << 4)
 }
 
-/// Decides whether moving the mouse draws, from polled input state (no key events, so no
-/// Accessibility permission). Hold ⌘ for fading ink, ⌘⌥ for lasting ink.
-///
-/// ⌘ is part of every shortcut, so a hold during which a key is typed (⌘C, ⌘-Tab) or a mouse
-/// button is pressed (⌘-click) draws nothing more until ⌘ is released.
-public struct InkTrigger: Sendable {
-    /// The key-press counter when this ⌘ hold was first seen; nil while ⌘ is up.
-    private var keyCountAtHold: UInt32?
-    private var spoiled = false
+/// One press of the mouse button. A press made with ⌘ or ⌘⌥ held draws until the button is
+/// released, and the press, drags and release are all kept from the app underneath.
+public struct InkGesture: Sendable {
+    /// A drawing press is in progress (its events are claimed until `up`).
+    public private(set) var isActive = false
+    private var stopped = false
 
     public init() {}
 
-    /// `keyDownCount`: a counter that goes up with every key press (system-wide).
-    public mutating func update(keys: HeldKeys, buttonDown: Bool, keyDownCount: UInt32)
-        -> InkMode?
-    {
-        guard keys.contains(.command) else {
-            keyCountAtHold = nil
-            spoiled = false
-            return nil
+    /// The button went down. Returns the mode when this press draws.
+    public mutating func down(keys: HeldKeys) -> InkMode? {
+        guard let mode = InkMode(keys: keys) else { return nil }
+        isActive = true
+        stopped = false
+        return mode
+    }
+
+    /// The mouse moved with the button down. Returns the mode to draw in: switching ⌥ switches
+    /// it; letting go of ⌘ stops drawing until the button is released.
+    public mutating func drag(keys: HeldKeys) -> InkMode? {
+        guard isActive, !stopped else { return nil }
+        let mode = InkMode(keys: keys)
+        if mode == nil { stopped = true }
+        return mode
+    }
+
+    /// The button went up. Returns whether it ends a drawing press (and is claimed too).
+    public mutating func up() -> Bool {
+        defer {
+            isActive = false
+            stopped = false
         }
-        if let start = keyCountAtHold {
-            if keyDownCount != start { spoiled = true }
-        } else {
-            keyCountAtHold = keyDownCount
-        }
-        if buttonDown { spoiled = true }
-        guard !spoiled else { return nil }
-        switch keys {
-        case [.command]: return .fading
-        case [.command, .option]: return .lasting
-        default: return nil
-        }
+        return isActive
     }
 }
 

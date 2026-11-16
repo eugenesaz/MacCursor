@@ -3,6 +3,10 @@
 Notes for each release, written for people using MacCursor. The newest version is at the top.
 The section for a version is what the update dialog shows.
 
+## [0.4.2] - 2026-11-16
+
+- The pointer now moves with you while you draw. Before, it stayed where the line started.
+
 ## [0.4.1] - 2026-11-16
 
 - Drawing now needs a click: hold **⌘** (fading line) or **⌘⌥** (lasting line) and **drag**.

@@ -22,6 +22,21 @@ final class InkController {
     var overlayAt: (CGPoint) -> Overlay? = { _ in nil }
     /// Runs while drawing: claimed drags don't reach the pointer's motion monitors.
     var onDraw: () -> Void = {}
+    /// Where the mouse is during a drawing press (AppKit global coordinates). The claimed
+    /// drags never reach the event system, so `NSEvent.mouseLocation` stays where the press
+    /// started; the pointer follows this instead. After the release it's kept until the
+    /// system position moves on, so the pointer doesn't jump back to the start.
+    var drawingPosition: CGPoint? {
+        if !gesture.isActive, let stale = staleSystemPosition,
+            NSEvent.mouseLocation != stale
+        {
+            lastDrawingPosition = nil
+            staleSystemPosition = nil
+        }
+        return lastDrawingPosition
+    }
+    private var lastDrawingPosition: CGPoint?
+    private var staleSystemPosition: CGPoint?
 
     init(settings: DrawSettings) { self.settings = settings }
 
@@ -38,6 +53,8 @@ final class InkController {
             removeTap()
             gesture = InkGesture()
             endStroke()
+            lastDrawingPosition = nil
+            staleSystemPosition = nil
         }
     }
 
@@ -81,18 +98,23 @@ final class InkController {
             else { return false }
             endStroke()
             startStroke(mode: mode, at: overlay.local(p), on: overlay)
+            lastDrawingPosition = p
+            staleSystemPosition = nil
             onDraw()
             return true
         case .leftMouseDragged:
             guard gesture.isActive else { return false }
-            draw(
-                mode: gesture.drag(keys: HeldKeys(event.flags)),
-                at: Self.appKitPoint(event.location))
+            let p = Self.appKitPoint(event.location)
+            draw(mode: gesture.drag(keys: HeldKeys(event.flags)), at: p)
+            lastDrawingPosition = p
+            staleSystemPosition = nil
             onDraw()
             return true
         case .leftMouseUp:
             guard gesture.up() else { return false }
             endStroke()
+            lastDrawingPosition = Self.appKitPoint(event.location)
+            staleSystemPosition = NSEvent.mouseLocation
             onDraw()
             return true
         default:

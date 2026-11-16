@@ -4,40 +4,6 @@ import Carbon.HIToolbox
 import MacCursorCore
 import MacCursorRender
 
-// MARK: - Hiding the system cursor from a background app
-
-// Public CGDisplayHideCursor only works for the frontmost app. This private
-// WindowServer connection property lets a background (accessory) app do it.
-// Undocumented: may break in future macOS releases. That's why the POC tests it.
-@_silgen_name("_CGSDefaultConnection")
-private func _CGSDefaultConnection() -> Int32
-
-@_silgen_name("CGSSetConnectionProperty")
-private func cgsSetConnectionProperty(
-    _ cid: Int32, _ targetCID: Int32, _ key: CFString, _ value: CFTypeRef
-) -> Int32
-
-enum CursorHider {
-    private(set) static var isHidden = false
-
-    static func setHidden(_ hide: Bool) {
-        guard hide != isHidden else { return }
-        if hide {
-            let cid = _CGSDefaultConnection()
-            let err = cgsSetConnectionProperty(
-                cid, cid, "SetsCursorInBackground" as CFString, kCFBooleanTrue)
-            let r = CGDisplayHideCursor(CGMainDisplayID())
-            log(
-                "hide system cursor: CGSSetConnectionProperty=\(err) CGDisplayHideCursor=\(r.rawValue)"
-            )
-        } else {
-            CGDisplayShowCursor(CGMainDisplayID())
-            log("show system cursor")
-        }
-        isHidden = hide
-    }
-}
-
 // MARK: - Global hotkeys (Carbon; needs no permissions)
 
 final class HotKeys {

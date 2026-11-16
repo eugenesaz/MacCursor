@@ -1,4 +1,5 @@
 import CoreGraphics
+import Foundation
 import MacCursorCore
 
 /// A pointer style, ready to draw: what a pack's `style.json` and `art.svg` describe.
@@ -10,6 +11,8 @@ public struct StylePack: @unchecked Sendable {
     public var author = ""
     public var license = ""
     public var version: String? = nil
+    /// The folder it was loaded from, if any.
+    public var folder: URL? = nil
 
     /// The silhouette: filled, and outlined per `outline`.
     public var body: Layer

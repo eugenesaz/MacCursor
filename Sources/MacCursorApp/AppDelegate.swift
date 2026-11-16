@@ -12,6 +12,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var pointer: PointerController { controller }
     private let settings = Settings.shared
     private let updater = Updater()
+    private lazy var installer = StyleInstaller(
+        select: { [weak self] id in self?.pointer.styleID = id },
+        showProblems: { [weak self] title, message, lines in
+            self?.showProblems(title: title, message: message, lines: lines)
+        })
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
@@ -67,6 +72,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc private func openStylesFolder() { StyleStore.shared.openFolder() }
+
+    @objc private func importStyle() { installer.importStyle() }
+
+    @objc private func removeStyle() { installer.removeStyle(currentID: pointer.styleID) }
 
     @objc private func showStyleProblems() {
         let failures = StyleStore.shared.library.failures
@@ -160,6 +169,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if failed > 0 {
             let title = "\(failed) style\(failed == 1 ? "" : "s") couldn't load…"
             menu.addItem(item(title, #selector(showStyleProblems)))
+        }
+        menu.addItem(item("Import Style…", #selector(importStyle)))
+        if !library.user.isEmpty {
+            menu.addItem(item("Remove Style…", #selector(removeStyle)))
         }
         menu.addItem(item("Open Styles Folder", #selector(openStylesFolder)))
 

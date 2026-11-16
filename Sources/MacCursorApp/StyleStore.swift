@@ -45,6 +45,7 @@ final class StyleStore {
     func start() {
         try? FileManager.default.createDirectory(
             at: Self.userDirectory, withIntermediateDirectories: true)
+        PackInstall.cleanLeftovers(in: Self.userDirectory)
         reload()
         guard watcher == nil else { return }
         let w = StyleFolderWatcher(directory: Self.userDirectory) {
@@ -72,6 +73,15 @@ final class StyleStore {
                 store.onChange?()
             }
         }
+    }
+
+    /// Re-reads every pack right away, on the main thread: after an import or removal the
+    /// user has just asked for, so the menu and pointer are up to date before the next click.
+    func reloadNow() {
+        generation += 1
+        library = StyleLibrary.load(
+            builtinDirectory: Self.builtinDirectory, userDirectory: Self.userDirectory)
+        onChange?()
     }
 
     /// Opens the user Styles folder in Finder, creating it first if needed.

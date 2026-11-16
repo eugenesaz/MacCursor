@@ -52,6 +52,7 @@ public enum StylePackLoader {
             problems
             + result.problems.filter { !(unread.contains($0.file) && $0.message == "is missing") }
         if !result.problems.isEmpty { result.pack = nil }
+        result.pack?.folder = folder
         return result
     }
 

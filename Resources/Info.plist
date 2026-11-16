@@ -12,6 +12,7 @@
     <key>LSMinimumSystemVersion</key><string>26.0</string>
     <key>LSUIElement</key><true/>
     <key>SUFeedURL</key><string>https://github.com/eugenesaz/MacCursor/releases/latest/download/appcast.xml</string>
+    <key>SUPublicEDKey</key><string>Zi4k+gMAxru0L7S1+eTEdGdEubiQUMVMm/q5HNHEJBs=</string>
     <key>SUEnableAutomaticChecks</key><true/>
     <key>SUScheduledCheckInterval</key><integer>86400</integer>
     <key>NSHighResolutionCapable</key><true/>

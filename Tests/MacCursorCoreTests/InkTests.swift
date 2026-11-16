@@ -78,6 +78,11 @@ import Testing
         #expect(InkMode(keys: keys) == expected)
     }
 
+    @Test(arguments: cases)
+    func rightClickClearsWithTheDrawingKeys(keys: HeldKeys, mode: InkMode?) {
+        #expect(InkMode.rightClickClears(keys: keys) == (mode != nil))
+    }
+
     @Test func movingWithoutAPressNeverDraws() {
         var g = InkGesture()
         let mode = g.drag(keys: [.command])

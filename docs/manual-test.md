@@ -34,7 +34,10 @@ Needs a second display.
 | D1 | Hold ⌘ and drag in a circle, then let go | A smooth red line follows the pointer's tip, under the pointer; about 3 s after letting go it fades out |
 | D1a | During D1, watch the pointer; let go and wait without moving | The pointer stays on the line's tip the whole time and doesn't jump back after release |
 | D2 | Hold ⌘⌥ and drag, wait 10 s | The line stays |
-| D3 | Press ⌃⌥X (or Draw ▸ Clear drawing) | Every line is gone, on every display |
+| D3 | Hold ⌘ and right-click (also with ⌘⌥; and Draw ▸ Clear drawing) | Every line is gone, on every display; nothing underneath gets the right-click (no context menu), no click effect or sound |
+| D3a | Right-click with ⌘⇧ or ⌃⌘ held, or with no keys | A normal right-click; lines stay |
+| D3b | With Presentation mode on, ⌘ right-click | The drawing is cleared |
+| D3c | Press ⌃⌥X | Nothing happens in MacCursor (the hotkey is gone) |
 | D4 | While dragging with ⌘, press and release ⌥ | The line switches between fading and lasting at that point |
 | D5 | Press ⌃⌥C a few times between lines; pick a color, Thick, and 10 s in the menu | Each new line uses the new color / thickness / fade time; existing lines keep theirs |
 | D6 | Hold ⌘ or ⌘⌥ and move without clicking; use ⌘C, ⌘-Tab | Nothing is drawn |

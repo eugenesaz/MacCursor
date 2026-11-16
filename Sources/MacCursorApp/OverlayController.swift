@@ -166,6 +166,7 @@ final class OverlayController {
             return self.activeOverlay(for: p)
         }
         ink.onDraw = { [weak self] in self?.wakeOverlays() }
+        ink.onClear = { [weak self] in self?.clearInk() }
         observeSession()
         NotificationCenter.default.addObserver(
             forName: NSApplication.didChangeScreenParametersNotification,

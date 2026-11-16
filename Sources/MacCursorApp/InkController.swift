@@ -2,9 +2,10 @@ import AppKit
 import MacCursorCore
 import QuartzCore
 
-/// Draws ink while the mouse button is held with ⌘ (fading) or ⌘⌥ (lasting). An event tap
-/// keeps those presses, drags and releases from the app underneath, so it needs the
-/// Accessibility permission. The lines live in each overlay's `inkLayer`.
+/// Draws ink while the mouse button is held with ⌘ (fading) or ⌘⌥ (lasting), and clears it on
+/// a right-click with the same keys. An event tap keeps those presses, drags and releases from
+/// the app underneath, so it needs the Accessibility permission. The lines live in each
+/// overlay's `inkLayer`.
 @MainActor
 final class InkController {
     static let maxLasting = 200
@@ -16,12 +17,16 @@ final class InkController {
     private var tap: CFMachPort?
     private var source: CFRunLoopSource?
     private var retry: Timer?
+    /// A clearing right-click is down: its drags and release are claimed too.
+    private var clearing = false
 
     /// The overlay to draw on at a point (AppKit global coordinates); nil where drawing isn't
     /// possible (no display there, screen locked).
     var overlayAt: (CGPoint) -> Overlay? = { _ in nil }
     /// Runs while drawing: claimed drags don't reach the pointer's motion monitors.
     var onDraw: () -> Void = {}
+    /// Clears all ink on every display (a ⌘ right-click).
+    var onClear: () -> Void = {}
     /// Where the mouse is during a drawing press (AppKit global coordinates). The claimed
     /// drags never reach the event system, so `NSEvent.mouseLocation` stays where the press
     /// started; the pointer follows this instead. After the release it's kept until the
@@ -52,6 +57,7 @@ final class InkController {
         } else {
             removeTap()
             gesture = InkGesture()
+            clearing = false
             endStroke()
             lastDrawingPosition = nil
             staleSystemPosition = nil
@@ -70,6 +76,10 @@ final class InkController {
             return isReady && InkMode(keys: HeldKeys(event.flags)) != nil
                 && overlayAt(Self.appKitPoint(event.location)) != nil
         case .leftMouseUp: return isDrawing
+        case .rightMouseDown:
+            return isReady && InkMode.rightClickClears(keys: HeldKeys(event.flags))
+                && overlayAt(Self.appKitPoint(event.location)) != nil
+        case .rightMouseDragged, .rightMouseUp: return clearing
         default: return false
         }
     }
@@ -116,6 +126,19 @@ final class InkController {
             lastDrawingPosition = Self.appKitPoint(event.location)
             staleSystemPosition = NSEvent.mouseLocation
             onDraw()
+            return true
+        case .rightMouseDown:
+            guard settings.isOn, InkMode.rightClickClears(keys: HeldKeys(event.flags)),
+                overlayAt(Self.appKitPoint(event.location)) != nil
+            else { return false }
+            clearing = true
+            onClear()
+            return true
+        case .rightMouseDragged:
+            return clearing
+        case .rightMouseUp:
+            guard clearing else { return false }
+            clearing = false
             return true
         default:
             return false
@@ -199,7 +222,10 @@ final class InkController {
             scheduleRetry()
             return
         }
-        let types: [CGEventType] = [.leftMouseDown, .leftMouseDragged, .leftMouseUp]
+        let types: [CGEventType] = [
+            .leftMouseDown, .leftMouseDragged, .leftMouseUp,
+            .rightMouseDown, .rightMouseDragged, .rightMouseUp,
+        ]
         let mask = types.reduce(CGEventMask(0)) { $0 | (CGEventMask(1) << $1.rawValue) }
         guard
             let tap = CGEvent.tapCreate(

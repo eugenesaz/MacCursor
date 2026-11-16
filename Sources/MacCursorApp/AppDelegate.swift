@@ -34,10 +34,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             [weak self] in
             self?.togglePresentation()
         }
-        HotKeys.shared.register(id: 3, keyCode: kVK_ANSI_X, modifiers: controlKey | optionKey) {
-            [weak self] in
-            self?.clearDrawing()
-        }
         HotKeys.shared.register(id: 4, keyCode: kVK_ANSI_C, modifiers: controlKey | optionKey) {
             [weak self] in
             self?.nextInkColor()
@@ -375,13 +371,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if draw.isOn && pointer.isEnabled && !controller.ink.isReady {
             sub.addItem(item("Allow Drawing in Accessibility Settings…", #selector(allowDrawing)))
         }
-        for hint in ["Hold ⌘ and drag: the line fades", "Hold ⌘⌥ and drag: the line stays"] {
+        for hint in [
+            "Hold ⌘ and drag: the line fades", "Hold ⌘⌥ and drag: the line stays",
+            "Hold ⌘ and right-click: clear the drawing",
+        ] {
             let i = NSMenuItem(title: hint, action: nil, keyEquivalent: "")
             i.isEnabled = false
             i.indentationLevel = 1
             sub.addItem(i)
         }
-        sub.addItem(item("Clear drawing", #selector(clearDrawing), key: "x"))
+        sub.addItem(item("Clear drawing", #selector(clearDrawing)))
         sub.addItem(item("Next color", #selector(nextInkColor), key: "c"))
 
         sub.addItem(.separator())

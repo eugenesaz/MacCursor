@@ -17,8 +17,8 @@ A free, open-source macOS menu bar app that makes your cursor impossible to miss
 - Shows up in full-screen shares and recordings.
 - Click feedback: a ripple and a paw-print stamp. Fast clicking adds bones (dog), hearts (cat) or dots. Moods: Subtle / Normal / Wild. Click sound: five soft sounds, a volume slider, and automatic softening when you click fast.
 - **Presentation mode** (prototype): clicks animate but never reach apps, and the keyboard keeps working. To leave it, press `⌃⌥T`, hold a click for 2 seconds, or untick it in the menu.
-- **Draw on screen** to point things out: hold `⌘` and drag for a line that fades after a few seconds, or `⌘⌥` and drag for one that stays until you clear it. Pick the color, thickness and fade time in the **Draw** menu. The drag never reaches the app underneath, so nothing gets clicked or selected (this needs the Accessibility permission).
-- Hotkeys: `⌃⌥P` toggles the pointer, `⌃⌥T` toggles presentation mode, `⌃⌥X` clears the drawing, `⌃⌥C` switches to the next ink color.
+- **Draw on screen** to point things out: hold `⌘` and drag for a line that fades after a few seconds, or `⌘⌥` and drag for one that stays until you clear it. Hold `⌘` and right-click to clear the drawing. Pick the color, thickness and fade time in the **Draw** menu. The drag never reaches the app underneath, so nothing gets clicked or selected (this needs the Accessibility permission).
+- Hotkeys: `⌃⌥P` toggles the pointer, `⌃⌥T` toggles presentation mode, `⌃⌥C` switches to the next ink color.
 
 ## Install
 

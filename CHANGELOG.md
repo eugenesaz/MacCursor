@@ -3,7 +3,7 @@
 Notes for each release, written for people using MacCursor. The newest version is at the top.
 The section for a version is what the update dialog shows.
 
-## [Unreleased]
+## [0.3.0] - 2026-11-16
 
 - The click sound is much quieter by default, and **Click sound** in the menu is now a submenu:
   - a **Volume** slider, with a preview as you drag;

@@ -18,8 +18,15 @@ let package = Package(
         // The menu bar app: overlay windows, event monitors, private SkyLight calls.
         .executableTarget(
             name: "MacCursorApp",
-            dependencies: ["MacCursorCore", "MacCursorRender"]
+            dependencies: ["MacCursorCore", "MacCursorRender", "Sparkle"],
+            linkerSettings: [
+                // Finds Sparkle.framework in Contents/Frameworks of the app bundle.
+                .unsafeFlags(["-Xlinker", "-rpath", "-Xlinker", "@executable_path/../Frameworks"])
+            ]
         ),
+        // Automatic updates: Sparkle's official prebuilt framework, fetched and checksum-verified
+        // by scripts/fetch-sparkle.sh. scripts/bundle.sh embeds it in the app.
+        .binaryTarget(name: "Sparkle", path: "Vendor/Sparkle.xcframework"),
         .testTarget(name: "MacCursorCoreTests", dependencies: ["MacCursorCore"]),
         .testTarget(
             name: "MacCursorRenderTests", dependencies: ["MacCursorRender"],

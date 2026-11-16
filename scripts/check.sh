@@ -7,6 +7,7 @@ source scripts/swift-env.sh
 
 step() { printf '\n==> %s\n' "$*"; }
 
+step "sparkle: fetch";      scripts/fetch-sparkle.sh
 step "swift: format lint"; swift format lint --strict -r Sources Tests Package.swift
 step "swift: build";       swift build
 step "swift: test";        scripts/swift-test.sh

@@ -11,6 +11,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     /// presentation-mode prototype until the `presentation` module replaces it.
     private var pointer: PointerController { controller }
     private let settings = Settings.shared
+    private let updater = Updater()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
@@ -73,6 +74,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc private func sizeChanged(_ sender: NSSlider) {
         pointer.size = sender.doubleValue
     }
+
+    @objc private func checkForUpdates() { updater?.checkForUpdates() }
 
     @objc private func toggleSound() { settings.sound.toggle() }
 
@@ -141,6 +144,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(hide)
 
         menu.addItem(.separator())
+        let version = NSMenuItem(
+            title: "Version \(Updater.version)", action: nil, keyEquivalent: "")
+        version.isEnabled = false
+        menu.addItem(version)
+        if updater != nil {
+            menu.addItem(item("Check for Updates…", #selector(checkForUpdates)))
+        }
         menu.addItem(
             NSMenuItem(
                 title: "Quit MacCursor", action: #selector(NSApplication.terminate(_:)),

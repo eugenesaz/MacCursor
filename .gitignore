@@ -11,3 +11,6 @@ CLAUDE.md
 .claude/
 CAPABILITIES.md
 SPEC*.md
+
+# Fetched by scripts/fetch-sparkle.sh
+Vendor/

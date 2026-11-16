@@ -58,9 +58,13 @@ Needs a second display.
 | L4 | Color: Auto. Switch System Settings → Appearance between Light and Dark | The paw's outline flips (dark on light, light on dark) within a second |
 | L5 | Color: Dark, then Light, with either system appearance | The outline stays dark, or light, as picked |
 | L6 | Try each style on a light page and on a dark editor | Each one reads clearly on both |
+| L7 | Drag the Tail slider in the menu from end to end, with a paw and with the hand | The tail shortens and grows live with no flicker; far left shows just the paw or hand with a closed outline; far right matches the full length |
+| L8 | Set a short tail, quit and relaunch | The tail length is kept |
+| L9 | Set a short tail, switch to Highlight ring, then back to a paw | The ring has no tail; the paw comes back with the same short tail |
 
 To review the art without running the app: `build/MacCursor.app/Contents/MacOS/MacCursor --render build/snapshots`
-writes every style × palette × size as a PNG (the same images the snapshot tests compare).
+writes every style × palette × size, plus each paw and the hand with no tail and a short
+tail, as a PNG (the same images the snapshot tests compare).
 
 ## Screen sharing
 
@@ -84,6 +88,17 @@ writes every style × palette × size as a PNG (the same images the snapshot tes
 | 8 | Auto color switches within 1 s | `PointerSettingsTests`, L4 |
 | 9 | CPU under 1% idle, 10% moving | T3, T4 |
 | 10 | Visible in a full-screen share | S1, S2 |
+
+Tail length (`SPEC-tail-length.md`, #15):
+
+| # | Criterion | Checked by |
+|---|---|---|
+| 1 | check.sh passes; existing snapshots unchanged | `./scripts/check.sh` |
+| 2 | Setting default, persistence, clamping, bad values | `PointerSettingsTests` |
+| 3 | No-tail and short-tail art for each paw and the hand | `SnapshotTests` (`*-tail*.png`) |
+| 4 | Live change, kept after relaunch, far left none, far right full | L7, L8 |
+| 5 | Kept across a switch to the ring and back | L9 |
+| 6 | No change in CPU | T3, T4 |
 
 ## Updates
 

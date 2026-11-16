@@ -2,9 +2,9 @@ import CoreGraphics
 
 extension Skins {
     static var cartoonHand: SkinArt {
-        // A cartoon glove, black and white: index finger pointing straight up, the
-        // other three fingers curled into a soft fist, thumb out to the left, three
-        // stitch lines on the back, a puffy rolled cuff and a grey sleeve below it.
+        // A cartoon glove, black and white, palm toward the viewer: index finger
+        // pointing straight up, the other three fingers curled into a soft fist with
+        // the thumb tucked across them, a puffy rolled cuff and a grey sleeve below it.
         // Grayscale only. The glove is built from parts listed back to front; each
         // part's ink line shows only where no part in front of it covers it.
         func capsule(from a: CGPoint, to b: CGPoint, r: CGFloat) -> CGPath {
@@ -35,20 +35,21 @@ extension Skins {
             )
             .union(
                 CGPath(rect: CGRect(x: -10.5, y: -60, width: 21, height: 10), transform: nil))
-        // Thumb, behind the hand, poking out up and to the left.
-        let thumb = capsule(from: pt(-5, -46), to: pt(-14.5, -35.5), r: 6.5)
-        // Three curled fingers: fat rolls across the top right of the fist, in front.
+        // Three curled fingers, folded toward the viewer: fat horizontal rolls
+        // stacked down the right of the fist, their knuckles bulging past its edge.
         let curls = [
-            capsule(from: pt(13, -29), to: pt(17, -29), r: 6),
-            capsule(from: pt(14.5, -38), to: pt(19, -38), r: 6),
-            capsule(from: pt(13.5, -46.5), to: pt(17, -46.5), r: 5.5),
+            capsule(from: pt(4, -28.5), to: pt(15.5, -28.5), r: 5.5),
+            capsule(from: pt(4, -37.5), to: pt(16, -37.5), r: 5.5),
+            capsule(from: pt(3, -46.5), to: pt(14.5, -46.5), r: 5.2),
         ]
+        // Thumb, tucked across the curled fingers from the heel of the hand.
+        let thumb = capsule(from: pt(-10, -50.5), to: pt(7.5, -43), r: 5.5)
         // Puffy rolled cuff: a fat soft roll, frontmost.
         let cuff = CGPath(
             roundedRect: CGRect(x: -14.5, y: -70, width: 29, height: 13),
             cornerWidth: 6.5, cornerHeight: 6.5, transform: nil)
 
-        let parts: [CGPath] = [thumb, body] + curls + [cuff]
+        let parts: [CGPath] = [body] + curls + [thumb, cuff]
         let silhouette = parts.dropFirst().reduce(parts[0]) { $0.union($1) }
 
         // Ink: an inner contour just inside the outer outline (so the white glove
@@ -70,12 +71,6 @@ extension Skins {
         }
         // Rolled cuff: a curved fold line along the roll, and short end creases.
         ink = ink.union(stroke(curve(pt(-9, -66.5), pt(0, -64), pt(9, -66.5)), 1.6))
-        // Three stitch lines down the back of the hand, fanning slightly.
-        for x in [-5.5, -1, 3.5] as [CGFloat] {
-            let seam = curve(pt(x, -34), pt(x - 0.8, -42), pt(x * 0.7, -50))
-            ink = ink.union(stroke(seam, 1.6))
-        }
-
         // Fingertip print for the click stamp: a small oval of concentric ridges.
         let print = CGMutablePath()
         for (i, r) in [(0, 7.0), (1, 4.8), (2, 2.6)] as [(Int, CGFloat)] {

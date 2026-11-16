@@ -18,6 +18,12 @@ BIN="$(swift build --show-bin-path)/MacCursor"
 if "$BIN" --validate Tests/MacCursorRenderTests/Fixtures/Packs/broken 2>/dev/null; then
   echo "the broken fixture pack passed validation" >&2; exit 1
 fi
+step "style packs: pack, re-read and preview"
+TMP="$(mktemp -d)"
+"$BIN" --pack Tests/MacCursorRenderTests/Fixtures/Packs/rocket -o "$TMP/rocket.maccursorstyle" >/dev/null
+"$BIN" --validate "$TMP/rocket.maccursorstyle"
+"$BIN" --preview "$TMP/rocket.maccursorstyle" "$TMP/rocket.png" >/dev/null
+rm -rf "$TMP"
 step "sparkle: appcast";    scripts/sparkle-smoke-test.sh
 
 printf '\nAll checks passed.\n'

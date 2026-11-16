@@ -94,6 +94,38 @@ public enum SnapshotRenderer {
         return ctx.makeImage()
     }
 
+    /// One image showing a pack at three sizes and clicking, on light and dark backgrounds
+    /// (light on top). For `--preview`, the import dialog and gallery previews.
+    /// - compact: only the default size, idle and clicking (for the import dialog).
+    public static func sheet(for pack: StylePack, compact: Bool = false) -> CGImage? {
+        let cell = CGSize(width: 260, height: 300)  // pixels per case (half of a snapshot)
+        let columns: [(size: Double, click: Bool)] =
+            compact
+            ? [(0.75, false), (0.75, true)]
+            : [(0.4, false), (0.75, false), (1.6, false), (0.75, true)]
+        let rows: [PaletteKind] = [.forLightScreens, .forDarkScreens]
+        guard
+            let ctx = CGContext(
+                data: nil, width: Int(cell.width) * columns.count,
+                height: Int(cell.height) * rows.count, bitsPerComponent: 8, bytesPerRow: 0,
+                space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        else { return nil }
+        ctx.interpolationQuality = .high
+        for (r, palette) in rows.enumerated() {
+            for (c, col) in columns.enumerated() {
+                let one = Case(pack: pack, palette: palette, size: col.size, click: col.click)
+                guard let image = image(for: one) else { continue }
+                // Row 0 (light) at the top; CG's origin is bottom-left.
+                let y = CGFloat(rows.count - 1 - r) * cell.height
+                ctx.draw(
+                    image, in: CGRect(origin: CGPoint(x: CGFloat(c) * cell.width, y: y), size: cell)
+                )
+            }
+        }
+        return ctx.makeImage()
+    }
+
     public static func writePNG(_ image: CGImage, to url: URL) {
         guard
             let dest = CGImageDestinationCreateWithURL(

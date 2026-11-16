@@ -9,6 +9,12 @@ public struct PackLoad: @unchecked Sendable {
     /// Things that are ignored, such as unknown keys or strokes in the art.
     public var warnings: [PackProblem]
 
+    public init(pack: StylePack?, problems: [PackProblem], warnings: [PackProblem]) {
+        self.pack = pack
+        self.problems = problems
+        self.warnings = warnings
+    }
+
     public var isValid: Bool { pack != nil && problems.isEmpty }
 }
 
@@ -193,6 +199,11 @@ public enum StylePackLoader {
 
     static func isPlainFileName(_ name: String) -> Bool {
         !name.isEmpty && !name.hasPrefix(".") && !name.contains("/") && !name.contains("\\")
+    }
+
+    /// The art file a manifest names, if it's a plain file name.
+    public static func loadArtName(_ json: Data) -> String? {
+        artFileName(json).flatMap { isPlainFileName($0) ? $0 : nil }
     }
 
     static func artFileName(_ json: Data) -> String? {

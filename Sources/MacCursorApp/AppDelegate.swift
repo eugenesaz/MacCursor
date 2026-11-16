@@ -1,7 +1,7 @@
 import AppKit
+import Carbon.HIToolbox
 import MacCursorCore
 import MacCursorRender
-import Carbon.HIToolbox
 
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var statusItem: NSStatusItem!
@@ -15,10 +15,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         statusItem.menu = menu
         updateIcon()
 
-        HotKeys.shared.register(id: 1, keyCode: kVK_ANSI_P, modifiers: controlKey | optionKey) { [weak self] in
+        HotKeys.shared.register(id: 1, keyCode: kVK_ANSI_P, modifiers: controlKey | optionKey) {
+            [weak self] in
             self?.togglePointer()
         }
-        HotKeys.shared.register(id: 2, keyCode: kVK_ANSI_T, modifiers: controlKey | optionKey) { [weak self] in
+        HotKeys.shared.register(id: 2, keyCode: kVK_ANSI_T, modifiers: controlKey | optionKey) {
+            [weak self] in
             self?.togglePresentation()
         }
         controller.setEnabled(true)
@@ -43,7 +45,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             if !controller.presentation.enable() {
                 let alert = NSAlert()
                 alert.messageText = "Presentation mode needs Accessibility access"
-                alert.informativeText = "Enable MacCursor in System Settings → Privacy & Security → Accessibility, then try again. Clicks are blocked from reaching apps while it's on; press ⌃⌥T to exit."
+                alert.informativeText =
+                    "Enable MacCursor in System Settings → Privacy & Security → Accessibility, then try again. Clicks are blocked from reaching apps while it's on; press ⌃⌥T to exit."
                 NSApp.activate(ignoringOtherApps: true)
                 alert.runModal()
             }
@@ -73,9 +76,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     private func updateIcon() {
-        let name = controller.presentation.isOn ? "pawprint.circle.fill"
+        let name =
+            controller.presentation.isOn
+            ? "pawprint.circle.fill"
             : controller.isEnabled ? "pawprint.fill" : "pawprint"
-        statusItem.button?.image = NSImage(systemSymbolName: name, accessibilityDescription: "MacCursor")
+        statusItem.button?.image = NSImage(
+            systemSymbolName: name, accessibilityDescription: "MacCursor")
     }
 
     // MARK: Menu
@@ -127,7 +133,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(hide)
 
         menu.addItem(.separator())
-        menu.addItem(NSMenuItem(title: "Quit MacCursor", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+        menu.addItem(
+            NSMenuItem(
+                title: "Quit MacCursor", action: #selector(NSApplication.terminate(_:)),
+                keyEquivalent: "q"))
     }
 
     private func item(_ title: String, _ action: Selector, key: String = "") -> NSMenuItem {

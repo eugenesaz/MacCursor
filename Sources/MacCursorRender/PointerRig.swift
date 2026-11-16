@@ -21,7 +21,9 @@ public final class PointerRig {
     static let legLength: CGFloat = 560
 
     public init(contentsScale: CGFloat) {
-        let all: [CALayer] = [root, legEdgeL, legEdgeR, back, legFill, front, outline, fur, pads, nails]
+        let all: [CALayer] = [
+            root, legEdgeL, legEdgeR, back, legFill, front, outline, fur, pads, nails,
+        ]
         for l in all {
             l.contentsScale = contentsScale
             l.anchorPoint = CGPoint(x: 0.5, y: 0.5)
@@ -68,10 +70,12 @@ public final class PointerRig {
         let hasLeg = art.armWidth > 0
         for l in [legEdgeL, legEdgeR, legFill] { l.isHidden = !hasLeg }
         guard hasLeg else { return }
-        let w = art.armWidth, L = Self.legLength, top = art.armTop + 12
-        legEdgeL.frame = CGRect(x: -w / 2 - ow, y: top - L, width: ow * 2, height: L)
-        legEdgeR.frame = CGRect(x: w / 2 - ow, y: top - L, width: ow * 2, height: L)
-        legFill.frame = CGRect(x: -w / 2, y: top - L, width: w, height: L)
+        let w = art.armWidth
+        let len = Self.legLength
+        let top = art.armTop + 12
+        legEdgeL.frame = CGRect(x: -w / 2 - ow, y: top - len, width: ow * 2, height: len)
+        legEdgeR.frame = CGRect(x: w / 2 - ow, y: top - len, width: ow * 2, height: len)
+        legFill.frame = CGRect(x: -w / 2, y: top - len, width: w, height: len)
         fade(legEdgeL, palette.outline)
         fade(legEdgeR, palette.outline)
         fade(legFill, art.fur)
@@ -80,7 +84,7 @@ public final class PointerRig {
     private func fade(_ g: CAGradientLayer, _ c: CGColor) {
         g.colors = [c, c, c.copy(alpha: 0)!]
         g.locations = [0, 0.3, 1]
-        g.startPoint = CGPoint(x: 0.5, y: 1) // top (layer coords are y-up on macOS)
+        g.startPoint = CGPoint(x: 0.5, y: 1)  // top (layer coords are y-up on macOS)
         g.endPoint = CGPoint(x: 0.5, y: 0)
     }
 
@@ -88,7 +92,8 @@ public final class PointerRig {
     /// - squash: 0…1 poke animation amount.
     public func setPose(position: CGPoint, angle: CGFloat, scale: CGFloat, squash: CGFloat) {
         root.position = position
-        root.setAffineTransform(CGAffineTransform(rotationAngle: angle).scaledBy(x: scale, y: scale))
+        root.setAffineTransform(
+            CGAffineTransform(rotationAngle: angle).scaledBy(x: scale, y: scale))
         let t = CGAffineTransform(translationX: 0, y: 5 * squash)
             .scaledBy(x: 1 + 0.14 * squash, y: 1 - 0.16 * squash)
         back.setAffineTransform(t)
@@ -110,8 +115,10 @@ public final class ClickEffect {
     private let intensity: CGFloat
     private let scale: CGFloat
 
-    public init(tip: CGPoint, angle: CGFloat, art: SkinArt, palette: Palette,
-         intensity: CGFloat, scale: CGFloat, contentsScale: CGFloat, start: CFTimeInterval) {
+    public init(
+        tip: CGPoint, angle: CGFloat, art: SkinArt, palette: Palette,
+        intensity: CGFloat, scale: CGFloat, contentsScale: CGFloat, start: CFTimeInterval
+    ) {
         self.start = start
         self.intensity = intensity
         self.scale = scale
@@ -160,8 +167,11 @@ public final class ClickEffect {
             front.fillColor = art.particleColor
             p.addSublayer(front)
             layer.addSublayer(p)
-            particles.append((p, CGVector(dx: cos(a), dy: sin(a)),
-                              .random(in: -4...4), .random(in: 24...36) + 10 * intensity))
+            particles.append(
+                (
+                    p, CGVector(dx: cos(a), dy: sin(a)),
+                    .random(in: -4...4), .random(in: 24...36) + 10 * intensity
+                ))
         }
         render(t: 0)
     }
@@ -169,14 +179,17 @@ public final class ClickEffect {
     public func render(t: CFTimeInterval) {
         let rt = min(t / 0.45, 1)
         let r = (10 + 22 * intensity * easeOut(rt)) * scale
-        ripple.path = CGPath(ellipseIn: CGRect(x: -r, y: -r, width: 2 * r, height: 2 * r), transform: nil)
+        ripple.path = CGPath(
+            ellipseIn: CGRect(x: -r, y: -r, width: 2 * r, height: 2 * r), transform: nil)
         ripple.lineWidth = (4 * (1 - rt) + 0.5) * scale
         ripple.opacity = Float(1 - rt)
 
         if let s = stamp {
             let st = min(t / Self.duration, 1)
             let pop = 0.85 + 0.2 * easeOut(min(t / 0.15, 1))
-            s.setAffineTransform(CGAffineTransform(rotationAngle: stampRotation).scaledBy(x: pop * scale, y: pop * scale))
+            s.setAffineTransform(
+                CGAffineTransform(rotationAngle: stampRotation).scaledBy(
+                    x: pop * scale, y: pop * scale))
             s.opacity = Float(0.55 * pow(1 - st, 1.5))
         }
 
@@ -184,7 +197,8 @@ public final class ClickEffect {
         for p in particles {
             let d = (14 + p.dist * easeOut(k)) * scale
             p.layer.position = CGPoint(x: p.dir.dx * d, y: p.dir.dy * d)
-            p.layer.setAffineTransform(CGAffineTransform(rotationAngle: p.spin * k).scaledBy(x: scale, y: scale))
+            p.layer.setAffineTransform(
+                CGAffineTransform(rotationAngle: p.spin * k).scaledBy(x: scale, y: scale))
             p.layer.opacity = Float(1 - k * k)
         }
     }

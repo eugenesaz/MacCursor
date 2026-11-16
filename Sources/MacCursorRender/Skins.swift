@@ -48,10 +48,11 @@ public struct Palette {
 }
 
 public func rgb(_ hex: UInt32, _ alpha: CGFloat = 1) -> CGColor {
-    CGColor(srgbRed: CGFloat((hex >> 16) & 0xFF) / 255,
-            green: CGFloat((hex >> 8) & 0xFF) / 255,
-            blue: CGFloat(hex & 0xFF) / 255,
-            alpha: alpha)
+    CGColor(
+        srgbRed: CGFloat((hex >> 16) & 0xFF) / 255,
+        green: CGFloat((hex >> 8) & 0xFF) / 255,
+        blue: CGFloat(hex & 0xFF) / 255,
+        alpha: alpha)
 }
 
 private typealias Oval = (x: CGFloat, y: CGFloat, rx: CGFloat, ry: CGFloat)
@@ -74,7 +75,9 @@ public enum Skins {
         switch kind {
         case .dogPaw:
             // Big, round, slightly splayed toes with visible nails.
-            let toes: [Oval] = [(-19, -18, 8, 9), (-7, -10, 8.5, 10), (7, -10, 8.5, 10), (19, -18, 8, 9)]
+            let toes: [Oval] = [
+                (-19, -18, 8, 9), (-7, -10, 8.5, 10), (7, -10, 8.5, 10), (19, -18, 8, 9),
+            ]
             let body: Oval = (0, -37, 23, 21)
             let toePads = toes.map { Oval($0.x, $0.y - 1.5, $0.rx * 0.6, $0.ry * 0.6) }
             let mainPad: [Oval] = [(0, -39, 11, 8.5), (-7, -44, 7.5, 6), (7, -44, 7.5, 6)]
@@ -91,7 +94,9 @@ public enum Skins {
 
         case .catPaw:
             // Smaller, rounder, pink toe beans, claws retracted.
-            let toes: [Oval] = [(-15, -15, 6.5, 7), (-5.5, -8, 7, 8), (5.5, -8, 7, 8), (15, -15, 6.5, 7)]
+            let toes: [Oval] = [
+                (-15, -15, 6.5, 7), (-5.5, -8, 7, 8), (5.5, -8, 7, 8), (15, -15, 6.5, 7),
+            ]
             let body: Oval = (0, -31, 19, 17.5)
             let beans = toes.map { Oval($0.x, $0.y - 1, $0.rx * 0.62, $0.ry * 0.62) }
             let mainPad: [Oval] = [(0, -33, 9, 7), (-5.5, -37, 6, 5), (5.5, -37, 6, 5)]
@@ -117,7 +122,9 @@ public enum Skins {
         switch kind {
         case .bone:
             let p = CGMutablePath()
-            p.addRoundedRect(in: CGRect(x: -6, y: -1.8, width: 12, height: 3.6), cornerWidth: 1.5, cornerHeight: 1.5)
+            p.addRoundedRect(
+                in: CGRect(x: -6, y: -1.8, width: 12, height: 3.6), cornerWidth: 1.5,
+                cornerHeight: 1.5)
             for (x, y) in [(-6.0, -1.8), (-6.0, 1.8), (6.0, -1.8), (6.0, 1.8)] {
                 p.addEllipse(in: CGRect(x: x - 2.4, y: y - 2.4, width: 4.8, height: 4.8))
             }

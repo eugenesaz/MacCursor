@@ -1,4 +1,5 @@
 import Testing
+
 @testable import MacCursorCore
 
 @Test func clampedKeepsValuesInRange() {

@@ -1,5 +1,6 @@
 import CoreGraphics
 import Testing
+
 @testable import MacCursorRender
 
 @Test(arguments: SkinKind.allCases)

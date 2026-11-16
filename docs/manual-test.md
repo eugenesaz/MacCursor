@@ -21,6 +21,9 @@ Style: Dog paw, with "Hide system cursor" on.
 | H10 | Run `build/MacCursor.app/Contents/MacOS/MacCursor` in Terminal, then press Ctrl-C | The arrow comes back |
 | H11 | Start it again and run `killall -TERM MacCursor`, then `killall -HUP MacCursor` | The arrow comes back each time |
 | H12 | Start it again and run `killall -KILL MacCursor` (a crash) | The arrow comes back within a second, since the window server drops our cursor with our connection. If it doesn't, file a bug |
+| H13 | Open MacCursor's own menu, hold still for 2 s, then move between items | The paw follows inside the menu (it never freezes) |
+| H14 | Lock the screen (⌃⌘Q), then unlock | The lock screen shows the normal arrow; after unlocking the paw is back and the arrow hidden again |
+| H15 | Switch to another user (fast user switching) and back | Same as H14 |
 
 ## Displays
 Needs a second display.
@@ -40,7 +43,7 @@ Needs a second display.
 |---|---|---|
 | T1 | Swing the mouse fast in circles on a 120 Hz (ProMotion) display | The paw stays glued to the cursor, with no visible trailing |
 | T2 | Record the screen at 120 fps (QuickTime) while moving fast and step through frames | The paw tip is within one frame of the click point |
-| T3 | Leave the mouse still for 10 s; Activity Monitor → CPU for MacCursor | Under 1% (measured 0.05% on an M-series Mac, 2026-11-15) |
+| T3 | Leave the mouse still for 10 s; Activity Monitor → CPU for MacCursor | Under 1% (measured about 0.1% on an M-series Mac, 2026-11-15) |
 | T4 | Keep moving the mouse; check CPU | Under 10% of one core |
 | T5 | Click fast for a few seconds | Click effects animate smoothly, and the paw doesn't freeze after you stop |
 | T6 | Leave it still for a minute, then move | The paw follows immediately (no wake-up delay) |
@@ -58,3 +61,26 @@ Needs a second display.
 
 To review the art without running the app: `build/MacCursor.app/Contents/MacOS/MacCursor --render build/snapshots`
 writes every style × palette × size as a PNG (the same images the snapshot tests compare).
+
+## Screen sharing
+
+| # | Do | Expect |
+|---|---|---|
+| S1 | Share your entire screen in Zoom or Google Meet; watch from another device | The viewer sees the paw and its click effects |
+| S2 | Record the screen with QuickTime or ⌘⇧5 | The recording shows the paw |
+| S3 | Share only one window | The paw doesn't show (macOS limitation, expected) |
+
+## Spec success criteria → where they're checked (`SPEC-pointer.md`)
+
+| # | Criterion | Checked by |
+|---|---|---|
+| 1 | check.sh passes | `./scripts/check.sh` |
+| 2 | Arrow never visible; back on toggle-off and quit | H1–H15 |
+| 3 | Tip within 1 pt of the click point | `DisplayLayoutTests`, `StyleCatalogTests`, D2 |
+| 4 | No visible lag at 120 Hz | T1, T2 |
+| 5 | Display changes rebuild within 1 s | D3, D4 |
+| 6 | 4 styles × 2 palettes render | `SnapshotTests`, L6 |
+| 7 | Size 0.4–1.6×, default 0.75×, kept | `PointerSettingsTests`, L1–L3 |
+| 8 | Auto color switches within 1 s | `PointerSettingsTests`, L4 |
+| 9 | CPU under 1% idle, 10% moving | T3, T4 |
+| 10 | Visible in a full-screen share | S1, S2 |

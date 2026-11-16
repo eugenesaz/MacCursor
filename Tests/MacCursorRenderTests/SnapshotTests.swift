@@ -27,6 +27,10 @@ import Testing
         }
         let reference = try #require(
             loadImage(url), "Missing reference \(name).png; run with UPDATE_SNAPSHOTS=1")
+        #expect(
+            image.width == reference.width && image.height == reference.height,
+            "\(name): rendered \(image.width)×\(image.height), reference \(reference.width)×\(reference.height)"
+        )
         let diff = try #require(differingFraction(image, reference))
         #expect(diff <= 0.001, "\(name): \(String(format: "%.3f", diff * 100))% of pixels differ")
     }
@@ -48,8 +52,7 @@ import Testing
     /// Fraction of pixels where any channel differs by more than 8/255. nil if sizes differ.
     private func differingFraction(_ a: CGImage, _ b: CGImage) -> Double? {
         guard a.width == b.width, a.height == b.height else { return nil }
-        let pa = rgba(a)
-        let pb = rgba(b)
+        guard let pa = rgba(a), let pb = rgba(b) else { return nil }
         var differing = 0
         for i in stride(from: 0, to: pa.count, by: 4) {
             for k in 0..<4 where abs(Int(pa[i + k]) - Int(pb[i + k])) > 8 {
@@ -60,16 +63,20 @@ import Testing
         return Double(differing) / Double(a.width * a.height)
     }
 
-    private func rgba(_ image: CGImage) -> [UInt8] {
+    /// The image's pixels as sRGB RGBA bytes; nil if they can't be read.
+    private func rgba(_ image: CGImage) -> [UInt8]? {
         var data = [UInt8](repeating: 0, count: image.width * image.height * 4)
-        data.withUnsafeMutableBytes { buf in
-            let ctx = CGContext(
-                data: buf.baseAddress, width: image.width, height: image.height,
-                bitsPerComponent: 8, bytesPerRow: image.width * 4,
-                space: CGColorSpace(name: CGColorSpace.sRGB)!,
-                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
-            ctx?.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+        let drawn = data.withUnsafeMutableBytes { buf -> Bool in
+            guard
+                let ctx = CGContext(
+                    data: buf.baseAddress, width: image.width, height: image.height,
+                    bitsPerComponent: 8, bytesPerRow: image.width * 4,
+                    space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                    bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+            else { return false }
+            ctx.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+            return true
         }
-        return data
+        return drawn ? data : nil
     }
 }

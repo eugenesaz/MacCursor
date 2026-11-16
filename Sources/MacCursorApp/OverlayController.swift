@@ -4,6 +4,7 @@ import MacCursorRender
 import QuartzCore
 
 /// One transparent, click-through window covering one display.
+@MainActor
 final class Overlay {
     let window: NSPanel
     let frame: CGRect
@@ -38,6 +39,7 @@ final class Overlay {
         view.wantsLayer = true
         window.contentView = view
         rig = PointerRig(contentsScale: backingScale)
+        rig.root.isHidden = true  // until the first frame positions it
         effectsLayer.frame = view.bounds
         view.layer!.addSublayer(effectsLayer)
         view.layer!.addSublayer(rig.root)
@@ -45,7 +47,10 @@ final class Overlay {
 
         let target = FrameTarget()
         let link = screen.displayLink(target: target, selector: #selector(FrameTarget.frame))
-        target.onFrame = { [unowned self] in onFrame(self) }
+        target.onFrame = { [weak self] in
+            guard let self else { return }
+            onFrame(self)
+        }
         link.add(to: .main, forMode: .common)
         displayLink = link
     }
@@ -61,8 +66,9 @@ final class Overlay {
         mouse: CGPoint, active: Bool, now: CFTimeInterval, scale: CGFloat, squash: CGFloat
     ) {
         // Nothing moved and nothing is animating: skip the frame (keeps idle CPU near zero).
-        if effects.isEmpty, let last = lastPose, last.mouse == mouse, last.active == active,
-            last.scale == scale, last.squash == squash
+        // A display without the pointer only needs to redraw when that changes.
+        if effects.isEmpty, let last = lastPose, last.active == active,
+            !active || (last.mouse == mouse && last.scale == scale && last.squash == squash)
         {
             // Still for a quarter second: stop the display link until `wake()`.
             idleFrames += 1
@@ -116,11 +122,13 @@ final class Overlay {
 }
 
 /// CADisplayLink needs an Objective-C target.
+@MainActor
 private final class FrameTarget: NSObject {
     var onFrame: (() -> Void)?
     @objc func frame() { onFrame?() }
 }
 
+@MainActor
 final class OverlayController {
     private var overlays: [Overlay] = []
     private var layout = DisplayLayout(frames: [])
@@ -131,20 +139,28 @@ final class OverlayController {
     private var lastClick: CFTimeInterval = -10
     private var lastIntensity: CGFloat = 1
     private var art = Skins.art(for: .dogPaw)
-    private var palette = Palette.forLightScreens
+    private var activePalette = Palette.forLightScreens
+    private var mouseWatch: Timer?
+    private var lastWatchedMouse = CGPoint(x: -1, y: -1)
+    /// True while the screen is locked or another user's session is active.
+    private var sessionInactive = false
     private var lastSystemDark = false
-    private let settings = Settings.shared
+    let settings = Settings.shared
     let presentation = PresentationMode()
     private(set) var isEnabled = false
 
     init() {
         presentation.onClick = { [weak self] in self?.handleClick() }
+        observeSession()
         NotificationCenter.default.addObserver(
             forName: NSApplication.didChangeScreenParametersNotification,
             object: nil, queue: .main
         ) { [weak self] _ in
-            guard let self, self.isEnabled else { return }
-            self.scheduleRebuild()
+            // Delivered on the main queue.
+            MainActor.assumeIsolated {
+                guard let self, self.isEnabled else { return }
+                self.scheduleRebuild()
+            }
         }
     }
 
@@ -154,9 +170,17 @@ final class OverlayController {
         if on {
             rebuild()
             // Auto color: follow system light/dark switches as they happen.
-            appearanceObservation = NSApp.observe(\.effectiveAppearance) { [weak self] _, _ in
-                DispatchQueue.main.async { self?.checkAppearance() }
+            appearanceObservation = NSApp.observe(\.effectiveAppearance) {
+                @Sendable [weak self] _, _ in
+                Task { @MainActor in self?.checkAppearance() }
             }
+            // Backstop for motion the event monitors miss: inside our own menu (local
+            // monitors don't run during menu tracking), cursor warps. Cheap at 15 Hz.
+            let watch = Timer(timeInterval: 1.0 / 15, repeats: true) { [weak self] _ in
+                MainActor.assumeIsolated { self?.watchMouse() }
+            }
+            RunLoop.main.add(watch, forMode: .common)
+            mouseWatch = watch
             let moves: NSEvent.EventTypeMask = [
                 .mouseMoved, .leftMouseDragged, .rightMouseDragged, .otherMouseDragged,
             ]
@@ -191,10 +215,13 @@ final class OverlayController {
             }
         } else {
             appearanceObservation = nil
+            mouseWatch?.invalidate()
+            mouseWatch = nil
             monitors.forEach(NSEvent.removeMonitor)
             monitors.removeAll()
             for overlay in overlays { overlay.close() }
             overlays.removeAll()
+            layout = DisplayLayout(frames: [])
             presentation.disable()
         }
         updateCursorVisibility()
@@ -204,10 +231,10 @@ final class OverlayController {
     /// Re-read skin / color settings.
     func refreshStyle() {
         art = Skins.art(for: settings.pointer.style)
-        palette = settings.resolvedPalette()
+        activePalette = settings.resolvedPalette()
         lastSystemDark = Settings.systemIsDark()
         for overlay in overlays {
-            overlay.rig.apply(art: art, palette: palette)
+            overlay.rig.apply(art: art, palette: activePalette)
             overlay.invalidatePose()
         }
         updateCursorVisibility()
@@ -216,7 +243,8 @@ final class OverlayController {
     func updateCursorVisibility() {
         cursorHider.setHidden(
             CursorPolicy.hidesSystemCursor(
-                pointerOn: isEnabled, settingOn: settings.pointer.hidesSystemCursor,
+                pointerOn: isEnabled && !sessionInactive,
+                settingOn: settings.pointer.hidesSystemCursor,
                 style: settings.pointer.style))
     }
 
@@ -231,8 +259,10 @@ final class OverlayController {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.25, execute: work)
     }
 
+    func displayIndex(for mouse: CGPoint) -> Int? { layout.index(containing: mouse) }
+
     private func activeOverlay(for mouse: CGPoint) -> Overlay? {
-        layout.index(containing: mouse).map { overlays[$0] }
+        displayIndex(for: mouse).map { overlays[$0] }
     }
 
     private func rebuild() {
@@ -246,7 +276,40 @@ final class OverlayController {
     }
 
     /// Pointer scale: the size setting (the mood no longer scales the pointer).
-    private var size: CGFloat { CGFloat(settings.pointer.size) }
+    private var scale: CGFloat { CGFloat(settings.pointer.size) }
+
+    private func watchMouse() {
+        let mouse = NSEvent.mouseLocation
+        guard mouse != lastWatchedMouse else { return }
+        lastWatchedMouse = mouse
+        wakeOverlays()
+    }
+
+    /// The lock screen and other sessions draw above our overlay, so they must get the
+    /// real arrow back.
+    private func observeSession() {
+        let workspace = NSWorkspace.shared.notificationCenter
+        let distributed = DistributedNotificationCenter.default()
+        let inactive: [(NotificationCenter, Notification.Name)] = [
+            (workspace, NSWorkspace.sessionDidResignActiveNotification),
+            (distributed, Notification.Name("com.apple.screenIsLocked")),
+        ]
+        let active: [(NotificationCenter, Notification.Name)] = [
+            (workspace, NSWorkspace.sessionDidBecomeActiveNotification),
+            (distributed, Notification.Name("com.apple.screenIsUnlocked")),
+        ]
+        for (center, name) in inactive + active {
+            let isInactive = inactive.contains { $0.1 == name }
+            center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                MainActor.assumeIsolated {
+                    guard let self else { return }
+                    self.sessionInactive = isInactive
+                    self.updateCursorVisibility()
+                    log("session \(isInactive ? "inactive: arrow back" : "active again")")
+                }
+            }
+        }
+    }
 
     /// Redraws on the next frame, e.g. after the size changed.
     func wakeOverlays() {
@@ -269,7 +332,7 @@ final class OverlayController {
         let mouse = NSEvent.mouseLocation
         overlay.update(
             mouse: mouse, active: overlay === activeOverlay(for: mouse), now: now,
-            scale: size, squash: squash)
+            scale: scale, squash: squash)
     }
 
     private func handleClick() {
@@ -285,7 +348,7 @@ final class OverlayController {
         CATransaction.setDisableActions(true)
         activeOverlay(for: mouse)?
             .addEffect(
-                at: mouse, art: art, palette: palette, intensity: lastIntensity, scale: size,
+                at: mouse, art: art, palette: activePalette, intensity: lastIntensity, scale: scale,
                 now: now)
         CATransaction.commit()
         if settings.sound, let s = NSSound(named: "Pop")?.copy() as? NSSound {

@@ -40,6 +40,8 @@ final class MemoryStore: SettingsStore {
         s.colorMode = .darkPointer
         #expect(store.values["skin"] as? String == "ring")
         #expect(store.values["colorMode"] as? String == "darkPointer")
+        s.hidesSystemCursor = false
+        #expect(store.values["hideSystemCursor"] as? Bool == false)
     }
 
     @Test(arguments: [(-3.0, 0.4), (0.1, 0.4), (0.4, 0.4), (1.0, 1.0), (1.6, 1.6), (9.0, 1.6)])

@@ -68,6 +68,31 @@ final class MemoryStore: SettingsStore {
         #expect(settings.size == 0.75)
     }
 
+    @Test func tailLengthDefaultsToFullAndPersists() {
+        #expect(settings.tailLength == 1.0)
+        settings.tailLength = 0.3
+        #expect(PointerSettings(store: store).tailLength == 0.3)
+        #expect(store.values["tailLength"] as? Double == 0.3)
+    }
+
+    @Test(arguments: [(-1.0, 0.0), (0.0, 0.0), (0.5, 0.5), (1.0, 1.0), (3.0, 1.0)])
+    func tailLengthIsClamped(input: Double, expected: Double) {
+        let s = settings
+        s.tailLength = input
+        #expect(s.tailLength == expected)
+    }
+
+    @Test func badStoredTailLengthFallsBackToFull() {
+        store.values["tailLength"] = "long"
+        #expect(settings.tailLength == 1.0)
+        store.values["tailLength"] = Double.nan
+        #expect(settings.tailLength == 1.0)
+        store.values["tailLength"] = -2.0
+        #expect(settings.tailLength == 0.0)
+        settings.tailLength = .infinity
+        #expect(settings.tailLength == 1.0)
+    }
+
     @Test(arguments: [
         (ColorMode.auto, false, PaletteKind.forLightScreens),
         (.auto, true, .forDarkScreens),

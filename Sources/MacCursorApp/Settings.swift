@@ -13,6 +13,7 @@ final class Settings {
         set { d.set(newValue.rawValue, forKey: "mood") }
     }
     let sound = SoundSettings(store: UserDefaults.standard)
+    let draw = DrawSettings(store: UserDefaults.standard)
 
     let pointer = PointerSettings(store: UserDefaults.standard)
 

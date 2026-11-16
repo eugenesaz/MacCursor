@@ -11,6 +11,8 @@ final class Overlay {
     let rig: PointerRig
     let backingScale: CGFloat
     private let effectsLayer = CALayer()
+    /// Drawn lines: above the click effects, below the pointer.
+    let inkLayer = CALayer()
     private var effects: [ClickEffect] = []
     private var displayLink: CADisplayLink?
     private var lastPose: (mouse: CGPoint, active: Bool, scale: CGFloat, squash: CGFloat)?
@@ -42,6 +44,8 @@ final class Overlay {
         rig.root.isHidden = true  // until the first frame positions it
         effectsLayer.frame = view.bounds
         view.layer!.addSublayer(effectsLayer)
+        inkLayer.frame = view.bounds
+        view.layer!.addSublayer(inkLayer)
         view.layer!.addSublayer(rig.root)
         window.orderFrontRegardless()
 
@@ -149,6 +153,7 @@ final class OverlayController {
     private var lastSystemDark = false
     let settings = Settings.shared
     let presentation = PresentationMode()
+    let ink = InkController(settings: Settings.shared.draw)
     private(set) var isEnabled = false
 
     init() {
@@ -187,14 +192,14 @@ final class OverlayController {
                 .mouseMoved, .leftMouseDragged, .rightMouseDragged, .otherMouseDragged,
             ]
             if let g = NSEvent.addGlobalMonitorForEvents(
-                matching: moves, handler: { [weak self] _ in self?.wakeOverlays() })
+                matching: moves, handler: { [weak self] _ in self?.mouseMoved() })
             {
                 monitors.append(g)
             }
             if let l = NSEvent.addLocalMonitorForEvents(
                 matching: moves,
                 handler: { [weak self] e in
-                    self?.wakeOverlays()
+                    self?.mouseMoved()
                     return e
                 })
             {
@@ -290,10 +295,26 @@ final class OverlayController {
 
     private func watchMouse() {
         let mouse = NSEvent.mouseLocation
+        // Runs even when the mouse is still, to notice the draw keys being released.
+        tickInk(mouse: mouse)
         guard mouse != lastWatchedMouse else { return }
         lastWatchedMouse = mouse
         wakeOverlays()
     }
+
+    private func mouseMoved() {
+        tickInk(mouse: NSEvent.mouseLocation)
+        wakeOverlays()
+    }
+
+    private func tickInk(mouse: CGPoint) {
+        ink.tick(
+            mouse: mouse, overlay: sessionInactive ? nil : activeOverlay(for: mouse),
+            overlays: overlays)
+    }
+
+    /// Removes every drawn line.
+    func clearInk() { ink.clear(overlays: overlays) }
 
     /// The lock screen and other sessions draw above our overlay, so they must get the
     /// real arrow back.

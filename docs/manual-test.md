@@ -84,6 +84,24 @@ Start from defaults (`defaults delete io.github.eugenesaz.maccursor`), or note y
 | C11 | Turn the pointer off (⌃⌥P) and click | No sound |
 | C12 | Share the screen with "share system audio" (Zoom/Meet) and click | The viewer hears the click |
 
+## Drawing (`SPEC-draw.md`, #31)
+
+| # | Do | Expect |
+|---|---|---|
+| D1 | Hold ⌘ and move the mouse in a circle, then let go | A smooth red line follows the pointer's tip, under the pointer; about 3 s after letting go it fades out |
+| D2 | Hold ⌘⌥ and draw, wait 10 s | The line stays |
+| D3 | Press ⌃⌥X (or Draw ▸ Clear drawing) | Every line is gone, on every display |
+| D4 | While drawing with ⌘, press and release ⌥ | The line switches between fading and lasting at that point |
+| D5 | Press ⌃⌥C a few times between lines; pick a color, Thick, and 10 s in the menu | Each new line uses the new color / thickness / fade time; existing lines keep theirs |
+| D6 | Press ⌘C, ⌘-Tab (moving the mouse in the switcher), ⌘-click a link, holding ⌘ afterwards and moving | Nothing is drawn until ⌘ is released and held again |
+| D7 | Hold ⌘⇧ or ⌃⌘ and move | Nothing is drawn |
+| D8 | Draw over a Keynote/PowerPoint slide in play mode | The slide doesn't advance; nothing is clicked or selected |
+| D9 | Draw on the second display; start a line on one display and cross to the other | Works there; the crossing line is cut off at the edge |
+| D10 | Turn off Draw ▸ Draw on screen and hold ⌘ while moving | Nothing is drawn; existing lines were cleared |
+| D11 | Change the draw settings, quit and relaunch | They are kept |
+| D12 | Draw 20 lasting lines, then move the pointer around; leave the mouse still 10 s | Pointer motion stays smooth; CPU under 1% when still |
+| D13 | Share the screen (Zoom/Meet) and record with QuickTime while drawing | Lines show in both |
+
 ## Screen sharing
 
 | # | Do | Expect |

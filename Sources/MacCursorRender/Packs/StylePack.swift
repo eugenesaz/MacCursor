@@ -39,6 +39,11 @@ public struct StylePack: @unchecked Sendable {
     /// Whether the Tail slider changes this style.
     public var hasTail: Bool { tail != nil }
 
+    public var jet: Jet? {
+        if case .jet(let j) = tail { return j }
+        return nil
+    }
+
     /// The leg, if the tail is one.
     public var leg: Leg? {
         if case .leg(let l) = tail { return l }
@@ -85,6 +90,25 @@ public struct StylePack: @unchecked Sendable {
 
     public enum Tail: @unchecked Sendable {
         case leg(Leg)
+        case jet(Jet)
+    }
+
+    /// A jet flame instead of a leg: an outer flame and a brighter core, flickering lengthwise.
+    /// Paths are relative to `join`, where the flame attaches, and point down (negative y).
+    public struct Jet: @unchecked Sendable {
+        public var flame: CGPath
+        public var core: CGPath
+        public var color: Color
+        public var coreColor: Color
+        public var join: CGPoint
+
+        public init(flame: CGPath, core: CGPath, color: Color, coreColor: Color, join: CGPoint) {
+            self.flame = flame
+            self.core = core
+            self.color = color
+            self.coreColor = coreColor
+            self.join = join
+        }
     }
 
     /// A fading leg or sleeve reaching in from off-screen.
@@ -131,11 +155,23 @@ public struct StylePack: @unchecked Sendable {
         public var color: Color
         /// A palette-coloured outline behind each particle.
         public var outlined = true
+        /// Each particle points the way it flies (art "up" = outward) and doesn't spin.
+        public var facesOutward = false
+        /// Particles start at the click point instead of a small ring around it.
+        public var fromCenter = false
+        /// Particles on every click; fast clicking adds more.
+        public var minimum = 0
 
-        public init(_ path: CGPath, color: Color, outlined: Bool = true) {
+        public init(
+            _ path: CGPath, color: Color, outlined: Bool = true, facesOutward: Bool = false,
+            fromCenter: Bool = false, minimum: Int = 0
+        ) {
             self.path = path
             self.color = color
             self.outlined = outlined
+            self.facesOutward = facesOutward
+            self.fromCenter = fromCenter
+            self.minimum = minimum
         }
     }
 }

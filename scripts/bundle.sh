@@ -27,6 +27,8 @@ cp Resources/Info.plist "$APP/Contents/Info.plist"
 # Built-in style packs (style.json + art.svg per folder).
 mkdir -p "$APP/Contents/Resources"
 ditto Resources/Styles "$APP/Contents/Resources/Styles"
+# App icon for Finder and the Dock; rebuilt from assets/icon.svg by scripts/make-app-icon.sh.
+cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
 if [ -n "${VERSION:-}" ]; then
   /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" \
     -c "Set :CFBundleVersion $VERSION" "$APP/Contents/Info.plist"

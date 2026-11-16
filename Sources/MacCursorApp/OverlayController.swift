@@ -228,13 +228,15 @@ final class OverlayController {
         log("pointer \(on ? "enabled" : "disabled")")
     }
 
-    /// Re-read skin / color settings.
+    /// Re-read skin / color / tail settings.
     func refreshStyle() {
         art = Skins.art(for: settings.pointer.style)
         activePalette = settings.resolvedPalette()
         lastSystemDark = Settings.systemIsDark()
         for overlay in overlays {
-            overlay.rig.apply(art: art, palette: activePalette)
+            overlay.rig.apply(
+                art: art, palette: activePalette,
+                tailLength: CGFloat(settings.pointer.tailLength))
             overlay.invalidatePose()
         }
         updateCursorVisibility()

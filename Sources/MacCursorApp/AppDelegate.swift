@@ -75,6 +75,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         pointer.size = sender.doubleValue
     }
 
+    @objc private func tailChanged(_ sender: NSSlider) {
+        pointer.tailLength = sender.doubleValue
+    }
+
     @objc private func checkForUpdates() { updater?.checkForUpdates() }
 
     @objc private func toggleSound() { settings.sound.toggle() }
@@ -114,7 +118,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
 
         menu.addItem(header("Size"))
-        menu.addItem(sizeSliderItem())
+        menu.addItem(
+            sliderItem(
+                value: pointer.size, range: PointerSettings.sizeRange,
+                action: #selector(sizeChanged(_:)), label: "Pointer size"))
+
+        menu.addItem(header("Tail"))
+        menu.addItem(
+            sliderItem(
+                value: pointer.tailLength, range: PointerSettings.tailLengthRange,
+                action: #selector(tailChanged(_:)), label: "Tail length"))
 
         menu.addItem(header("Mood"))
         for mood in Mood.allCases {
@@ -164,14 +177,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         return i
     }
 
-    private func sizeSliderItem() -> NSMenuItem {
-        let range = PointerSettings.sizeRange
+    private func sliderItem(
+        value: Double, range: ClosedRange<Double>, action: Selector, label: String
+    ) -> NSMenuItem {
         let slider = NSSlider(
-            value: pointer.size, minValue: range.lowerBound, maxValue: range.upperBound,
-            target: self, action: #selector(sizeChanged(_:)))
+            value: value, minValue: range.lowerBound, maxValue: range.upperBound,
+            target: self, action: action)
         slider.isContinuous = true
         slider.frame = NSRect(x: 20, y: 4, width: 180, height: 22)
-        slider.setAccessibilityLabel("Pointer size")
+        slider.setAccessibilityLabel(label)
         let view = NSView(frame: NSRect(x: 0, y: 0, width: 220, height: 30))
         view.addSubview(slider)
         let item = NSMenuItem()

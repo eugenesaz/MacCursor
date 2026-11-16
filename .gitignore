@@ -1,0 +1,6 @@
+
+# Third-party reference captures (Pokey) — local only, never publish
+research/
+.build/
+build/
+.DS_Store

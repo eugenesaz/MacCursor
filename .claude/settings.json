@@ -1,0 +1,14 @@
+{
+  "enabledPlugins": {
+    "agent-skills@addy-agent-skills": true,
+    "superpowers@claude-plugins-official": false
+  },
+  "extraKnownMarketplaces": {
+    "addy-agent-skills": {
+      "source": {
+        "source": "git",
+        "url": "https://github.com/addyosmani/agent-skills.git"
+      }
+    }
+  }
+}

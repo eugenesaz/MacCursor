@@ -3,6 +3,11 @@
 Notes for each release, written for people using MacCursor. The newest version is at the top.
 The section for a version is what the update dialog shows.
 
+## [Unreleased]
+
+- New **Tail** slider in the menu, under Size: shorten the paw's leg or the hand's sleeve, or
+  slide it all the way left to show just the paw or hand. The highlight ring has no tail.
+
 ## [0.1.1] - 2026-11-16
 
 - The cartoon hand is redrawn as a classic cartoon glove: a pointing finger, a broad thumb,

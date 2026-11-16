@@ -233,11 +233,19 @@ final class OverlayController {
         art = Skins.art(for: settings.pointer.style)
         activePalette = settings.resolvedPalette()
         lastSystemDark = Settings.systemIsDark()
+        applyRig()
+        updateCursorVisibility()
+    }
+
+    /// Redraws every overlay's pointer with the current art, palette and tail length.
+    /// Cheap enough to run on every tick of the Tail slider; `refreshStyle` rebuilds the art.
+    func applyRig() {
         for overlay in overlays {
-            overlay.rig.apply(art: art, palette: activePalette)
+            overlay.rig.apply(
+                art: art, palette: activePalette,
+                tailLength: CGFloat(settings.pointer.tailLength))
             overlay.invalidatePose()
         }
-        updateCursorVisibility()
     }
 
     func updateCursorVisibility() {

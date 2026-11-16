@@ -43,7 +43,8 @@ public final class PointerRig {
         root.addSublayer(front)
     }
 
-    public func apply(art: SkinArt, palette: Palette) {
+    /// - tailLength: 0…1 share of the full leg; 0 = no leg.
+    public func apply(art: SkinArt, palette: Palette, tailLength: CGFloat = 1) {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         defer { CATransaction.commit() }
@@ -67,11 +68,11 @@ public final class PointerRig {
         nails.path = art.nails
         nails.fillColor = art.nailColor
 
-        let hasLeg = art.armWidth > 0
+        let hasLeg = art.armWidth > 0 && tailLength > 0
         for l in [legEdgeL, legEdgeR, legFill] { l.isHidden = !hasLeg }
         guard hasLeg else { return }
         let w = art.armWidth
-        let len = Self.legLength
+        let len = Self.legLength * min(tailLength, 1)
         let top = art.armTop + 12
         let x = art.armX
         legEdgeL.frame = CGRect(x: x - w / 2 - ow, y: top - len, width: ow * 2, height: len)

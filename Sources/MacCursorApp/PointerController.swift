@@ -12,6 +12,8 @@ protocol PointerController: AnyObject {
     var style: PointerStyle { get set }
     /// 0.4…1.6; out-of-range values are clamped.
     var size: Double { get set }
+    /// 0…1 share of the full leg/sleeve; 0 = no tail. Out-of-range values are clamped.
+    var tailLength: Double { get set }
     var colorMode: ColorMode { get set }
     var hidesSystemCursor: Bool { get set }
 
@@ -35,6 +37,14 @@ extension OverlayController: PointerController {
         set {
             settings.pointer.size = newValue
             wakeOverlays()
+        }
+    }
+
+    var tailLength: Double {
+        get { settings.pointer.tailLength }
+        set {
+            settings.pointer.tailLength = newValue
+            applyRig()
         }
     }
 

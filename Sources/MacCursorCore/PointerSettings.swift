@@ -42,6 +42,8 @@ public enum PaletteKind: Sendable {
 public final class PointerSettings {
     public static let sizeRange: ClosedRange<Double> = 0.4...1.6
     public static let defaultSize = 0.75
+    public static let tailLengthRange: ClosedRange<Double> = 0...1
+    public static let defaultTailLength = 1.0
 
     private let store: SettingsStore
 
@@ -51,6 +53,7 @@ public final class PointerSettings {
     private enum Key {
         static let style = "skin"
         static let size = "size"
+        static let tailLength = "tailLength"
         static let colorMode = "colorMode"
         static let hidesSystemCursor = "hideSystemCursor"
     }
@@ -71,6 +74,22 @@ public final class PointerSettings {
         set {
             let v = newValue.isFinite ? newValue.clamped(to: Self.sizeRange) : Self.defaultSize
             store.set(v, forKey: Key.size)
+        }
+    }
+
+    /// Share of the full leg/sleeve (the "tail") to draw: 0 = none, 1 = full length.
+    public var tailLength: Double {
+        get {
+            guard let v = store.object(forKey: Key.tailLength) as? Double, v.isFinite else {
+                return Self.defaultTailLength
+            }
+            return v.clamped(to: Self.tailLengthRange)
+        }
+        set {
+            let v =
+                newValue.isFinite
+                ? newValue.clamped(to: Self.tailLengthRange) : Self.defaultTailLength
+            store.set(v, forKey: Key.tailLength)
         }
     }
 

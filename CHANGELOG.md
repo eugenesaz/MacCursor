@@ -3,7 +3,7 @@
 Notes for each release, written for people using MacCursor. The newest version is at the top.
 The section for a version is what the update dialog shows.
 
-## [Unreleased]
+## [0.3.1] - 2026-11-16
 
 - Styles with a jet flame can make it as long as the paws' legs: add `"length": 560` to the
   jet in `style.json`.

@@ -3,6 +3,11 @@
 Notes for each release, written for people using MacCursor. The newest version is at the top.
 The section for a version is what the update dialog shows.
 
+## [Unreleased]
+
+- Styles with a jet flame can make it as long as the paws' legs: add `"length": 560` to the
+  jet in `style.json`.
+
 ## [0.3.0] - 2026-11-16
 
 - The click sound is much quieter by default, and **Click sound** in the menu is now a submenu:
@@ -10,11 +15,6 @@ The section for a version is what the update dialog shows.
   - five sounds: **Tap** (the new default), **Tick**, **Knock**, **Boop**, and the old **Pop**;
   - **Quieter when clicking fast:** quick clicks get softer and no longer pile up;
   - **Follow mood:** Subtle is softer and lower, Wild is brighter.
-
-## [Unreleased]
-
-- Styles with a jet flame can make it as long as the paws' legs: add `"length": 560` to the
-  jet in `style.json`.
 
 ## [0.2.0] - 2026-11-16
 

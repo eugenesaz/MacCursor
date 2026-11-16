@@ -117,8 +117,11 @@ public final class ClickEffect {
 
     public init(
         tip: CGPoint, angle: CGFloat, art: SkinArt, palette: Palette,
-        intensity: CGFloat, scale: CGFloat, contentsScale: CGFloat, start: CFTimeInterval
+        intensity: CGFloat, scale: CGFloat, contentsScale: CGFloat, start: CFTimeInterval,
+        seed: UInt64? = nil
     ) {
+        // A fixed seed makes the effect repeatable (snapshot tests); live clicks vary.
+        var rng = SplitMix64(seed: seed ?? UInt64.random(in: 0...UInt64.max))
         self.start = start
         self.intensity = intensity
         self.scale = scale
@@ -134,7 +137,7 @@ public final class ClickEffect {
             // Print lands where the pads are: below the tip, along the leg.
             let off = art.stampOffsetY * scale
             s.position = CGPoint(x: -sin(angle) * off, y: cos(angle) * off)
-            stampRotation = angle + .random(in: -0.25...0.25)
+            stampRotation = angle + .random(in: -0.25...0.25, using: &rng)
             layer.addSublayer(s)
             stamp = s
         }
@@ -146,7 +149,7 @@ public final class ClickEffect {
 
         let count = intensity >= 1.4 ? Int((intensity * 3).rounded()) : 0
         for i in 0..<count {
-            let a = CGFloat(i) / CGFloat(count) * 2 * .pi + .random(in: -0.3...0.3)
+            let a = CGFloat(i) / CGFloat(count) * 2 * .pi + .random(in: -0.3...0.3, using: &rng)
             // Outline trick: a stroked copy behind the fill gives one clean outer edge.
             let p = CALayer()
             p.bounds = .zero
@@ -170,7 +173,8 @@ public final class ClickEffect {
             particles.append(
                 (
                     p, CGVector(dx: cos(a), dy: sin(a)),
-                    .random(in: -4...4), .random(in: 24...36) + 10 * intensity
+                    .random(in: -4...4, using: &rng),
+                    .random(in: 24...36, using: &rng) + 10 * intensity
                 ))
         }
         render(t: 0)
@@ -215,4 +219,17 @@ public final class ClickEffect {
     }
 
     private func easeOut(_ x: Double) -> Double { 1 - pow(1 - x, 3) }
+}
+
+/// Small seedable generator (SplitMix64), so a seed always gives the same click effect.
+struct SplitMix64: RandomNumberGenerator {
+    private var state: UInt64
+    init(seed: UInt64) { state = seed }
+    mutating func next() -> UInt64 {
+        state &+= 0x9E37_79B9_7F4A_7C15
+        var z = state
+        z = (z ^ (z >> 30)) &* 0xBF58_476D_1CE4_E5B9
+        z = (z ^ (z >> 27)) &* 0x94D0_49BB_1331_11EB
+        return z ^ (z >> 31)
+    }
 }

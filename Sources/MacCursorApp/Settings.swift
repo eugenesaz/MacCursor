@@ -12,7 +12,6 @@ enum Mood: String, CaseIterable {
         case .wild: return "Wild"
         }
     }
-    var scale: CGFloat { [.subtle: 0.8, .normal: 1.0, .wild: 1.3][self]! }
     var intensity: CGFloat { [.subtle: 0.6, .normal: 1.0, .wild: 1.6][self]! }
 }
 

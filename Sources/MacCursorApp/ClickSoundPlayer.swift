@@ -105,10 +105,12 @@ final class ClickSoundPlayer {
 
     private func buffer(for kind: ClickSoundKind) -> AVAudioPCMBuffer? {
         if let b = buffers[kind] { return b }
-        guard let samples = ClickSynth.samples(for: kind) ?? Self.loadPop() else {
-            return kind == .pop ? buffer(for: .tap) : nil
+        let b: AVAudioPCMBuffer?
+        if let samples = ClickSynth.samples(for: kind) ?? Self.loadPop() {
+            b = makeBuffer(samples)
+        } else {
+            b = buffer(for: .tap)  // Pop is missing from this macOS: use Tap, and remember that
         }
-        let b = makeBuffer(samples)
         buffers[kind] = b
         return b
     }

@@ -30,7 +30,7 @@ let package = Package(
         .testTarget(name: "MacCursorCoreTests", dependencies: ["MacCursorCore"]),
         .testTarget(
             name: "MacCursorRenderTests", dependencies: ["MacCursorRender"],
-            exclude: ["Snapshots"]),
+            exclude: ["Snapshots", "Fixtures"]),
     ],
     swiftLanguageModes: [.v6]
 )

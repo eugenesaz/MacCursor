@@ -14,7 +14,7 @@ import Testing
     static let updating = ProcessInfo.processInfo.environment["UPDATE_SNAPSHOTS"] == "1"
 
     static var allCases: [SnapshotRenderer.Case] {
-        SnapshotRenderer.cases(for: BuiltinPacks.library.builtins)
+        SnapshotRenderer.cases(for: BuiltinPacks.library.builtins + [BuiltinPacks.rocket])
     }
 
     @Test func builtinPacksAllLoad() {

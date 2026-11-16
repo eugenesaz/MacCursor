@@ -3,7 +3,7 @@
 Notes for each release, written for people using MacCursor. The newest version is at the top.
 The section for a version is what the update dialog shows.
 
-## [Unreleased]
+## [0.2.0] - 2026-11-16
 
 - **Styles you can add yourself.** Choose **Import Style…** in the menu to add a style someone
   sent you as a `.maccursorstyle` file. You see a preview first, and **Remove Style…** takes it

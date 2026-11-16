@@ -3,6 +3,14 @@
 Notes for each release, written for people using MacCursor. The newest version is at the top.
 The section for a version is what the update dialog shows.
 
+## [Unreleased]
+
+- The click sound is much quieter by default, and **Click sound** in the menu is now a submenu:
+  - a **Volume** slider, with a preview as you drag;
+  - five sounds: **Tap** (the new default), **Tick**, **Knock**, **Boop**, and the old **Pop**;
+  - **Quieter when clicking fast:** quick clicks get softer and no longer pile up;
+  - **Follow mood:** Subtle is softer and lower, Wild is brighter.
+
 ## [0.2.0] - 2026-11-16
 
 - **Styles you can add yourself.** Choose **Import Style…** in the menu to add a style someone

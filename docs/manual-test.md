@@ -66,6 +66,24 @@ To review the art without running the app: `build/MacCursor.app/Contents/MacOS/M
 writes every style × palette × size, plus each paw and the hand with no tail and a short
 tail, as a PNG (the same images the snapshot tests compare).
 
+## Click sound
+Start from defaults (`defaults delete io.github.eugenesaz.maccursor`), or note your old settings.
+
+| # | Do | Expect |
+|---|---|---|
+| C1 | Click a few times with the default settings | A soft "tap", clearly quieter than the old Pop |
+| C2 | Click sound ▸ drag the Volume slider from end to end | A preview plays as you drag, getting louder to the right; far left is silent |
+| C3 | Pick each of Tap, Tick, Knock, Boop and Pop | Each plays once when picked, then on every click; all sound about equally loud |
+| C4 | Click 10 times as fast as you can | The clicks get softer and never stack into a rattle |
+| C5 | Turn off "Quieter when clicking fast", repeat C4 | Every click is the same level, still no pile-up |
+| C6 | Mood: Subtle, then Wild, with "Follow mood" on | Subtle is softer and lower, Wild is brighter but not louder |
+| C7 | Turn off "Play click sound", click; then pick a sound | Clicks are silent; picking a sound still plays a preview |
+| C8 | Change several sound settings, quit and relaunch | All of them are kept |
+| C9 | Plug in or unplug headphones (or switch output in Control Center), then click | The sound plays on the new output |
+| C10 | Click, then leave the mouse still for 10 s; check CPU (Activity Monitor) | Under 1%, as T3 (the audio engine pauses after 5 s) |
+| C11 | Turn the pointer off (⌃⌥P) and click | No sound |
+| C12 | Share the screen with "share system audio" (Zoom/Meet) and click | The viewer hears the click |
+
 ## Screen sharing
 
 | # | Do | Expect |

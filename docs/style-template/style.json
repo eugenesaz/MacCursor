@@ -1,0 +1,25 @@
+{
+  "format": 1,
+  "id": "com.example.my-style",
+  "name": "My style",
+  "author": "Your name",
+  "license": "CC0-1.0",
+  "version": "1.0.0",
+  "art": "art.svg",
+  "hotspot": [50, 10],
+  "body": { "art": "body", "color": "#7E57C2" },
+  "details": [
+    { "art": "spot", "color": "#FFFFFF" }
+  ],
+  "tail": {
+    "leg": { "width": 18, "join": [50, 64], "color": "#7E57C2" }
+  },
+  "click": {
+    "stamp": { "art": "stamp", "offset": 0 },
+    "particles": { "art": "star", "color": "#FFC107" }
+  },
+  "darkScreens": {
+    "body": "#B39DDB",
+    "leg": "#B39DDB"
+  }
+}

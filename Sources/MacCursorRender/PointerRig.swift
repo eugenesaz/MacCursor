@@ -14,28 +14,36 @@ public final class PointerRig {
     private let front = CALayer()
     private let outline = CAShapeLayer()
     private let fur = CAShapeLayer()
-    private let pads = CAShapeLayer()
-    private let nails = CAShapeLayer()
+    /// One layer per detail (pads, nails, ink…), in drawing order.
+    private var details: [CAShapeLayer] = []
+    private let contentsScale: CGFloat
+    // Internal, not private: tests check the jet follows the Tail slider.
+    let jet = CALayer()
+    let jetFlame = CAShapeLayer()
+    private let jetCore = CAShapeLayer()
 
     static let outlineWidth: CGFloat = 2.5
     static let legLength: CGFloat = 560
 
     public init(contentsScale: CGFloat) {
+        self.contentsScale = contentsScale
         let all: [CALayer] = [
-            root, legEdgeL, legEdgeR, back, legFill, front, outline, fur, pads, nails,
+            root, legEdgeL, legEdgeR, back, legFill, front, outline, fur, jet, jetFlame, jetCore,
         ]
         for l in all {
             l.contentsScale = contentsScale
             l.anchorPoint = CGPoint(x: 0.5, y: 0.5)
         }
-        for l in [root, back, front, outline, fur, pads, nails] as [CALayer] {
+        for l in [root, back, front, outline, fur, jet, jetFlame, jetCore] as [CALayer] {
             l.bounds = .zero
             l.position = .zero
         }
+        // The jet sits under the outline, so the art covers where the flame starts.
+        jet.addSublayer(jetFlame)
+        jet.addSublayer(jetCore)
+        back.addSublayer(jet)
         back.addSublayer(outline)
         front.addSublayer(fur)
-        front.addSublayer(pads)
-        front.addSublayer(nails)
         root.addSublayer(legEdgeL)
         root.addSublayer(legEdgeR)
         root.addSublayer(back)
@@ -44,43 +52,94 @@ public final class PointerRig {
     }
 
     /// - tailLength: 0…1 share of the full leg; 0 = no leg.
-    public func apply(art: SkinArt, palette: Palette, tailLength: CGFloat = 1) {
+    public func apply(pack: StylePack, palette: Palette, tailLength: CGFloat = 1) {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         defer { CATransaction.commit() }
 
         let ow = Self.outlineWidth
-        outline.path = art.silhouette
-        fur.path = art.silhouette
-        fur.fillColor = art.fur
-        if art.isRing {
+        let rule: CAShapeLayerFillRule = pack.body.evenOdd ? .evenOdd : .nonZero
+        outline.path = pack.body.path
+        outline.fillRule = rule
+        fur.path = pack.body.path
+        fur.fillRule = rule
+        fur.fillColor = pack.body.color.resolved(palette)
+        switch pack.outline {
+        case .stroke(let color, let width):
             outline.fillColor = nil
-            outline.strokeColor = art.particleColor
-            outline.lineWidth = 3
-        } else {
+            outline.strokeColor = color.resolved(palette)
+            outline.lineWidth = width
+        case .palette:
             outline.fillColor = palette.outline
             outline.strokeColor = palette.outline
             outline.lineWidth = ow * 2
             outline.lineJoin = .round
         }
-        pads.path = art.pads
-        pads.fillColor = art.padColor
-        nails.path = art.nails
-        nails.fillColor = art.nailColor
+        applyDetails(pack.details, palette: palette)
+        applyJet(pack.jet, palette: palette, length: tailLength)
 
-        let hasLeg = art.armWidth > 0 && tailLength > 0
-        for l in [legEdgeL, legEdgeR, legFill] { l.isHidden = !hasLeg }
-        guard hasLeg else { return }
-        let w = art.armWidth
+        let leg = tailLength > 0 ? pack.leg : nil
+        for l in [legEdgeL, legEdgeR, legFill] { l.isHidden = leg == nil }
+        guard let leg else { return }
+        let w = leg.width
         let len = Self.legLength * min(tailLength, 1)
-        let top = art.armTop + 12
-        let x = art.armX
+        let top = leg.join.y + 12
+        let x = leg.join.x
         legEdgeL.frame = CGRect(x: x - w / 2 - ow, y: top - len, width: ow * 2, height: len)
         legEdgeR.frame = CGRect(x: x + w / 2 - ow, y: top - len, width: ow * 2, height: len)
         legFill.frame = CGRect(x: x - w / 2, y: top - len, width: w, height: len)
         fade(legEdgeL, palette.outline)
         fade(legEdgeR, palette.outline)
-        fade(legFill, art.legColor ?? art.fur)
+        fade(legFill, leg.color.resolved(palette))
+    }
+
+    /// - length: the Tail slider's 0…1 share of the full flame; 0 = no flame.
+    private func applyJet(_ j: StylePack.Jet?, palette: Palette, length: CGFloat) {
+        let shown = j != nil && length > 0
+        jet.isHidden = !shown
+        guard let j, shown else {
+            jet.removeAllAnimations()
+            jetCore.removeAllAnimations()
+            return
+        }
+        jet.position = j.join
+        // Shortened lengthwise about the join, keeping its width.
+        var t = CGAffineTransform(scaleX: 1, y: min(length, 1))
+        jetFlame.path = j.flame.copy(using: &t)
+        jetFlame.fillColor = j.color.resolved(palette)
+        jetCore.path = j.core.copy(using: &t)
+        jetCore.fillColor = j.coreColor.resolved(palette)
+        // Flicker lengthwise; runs in the render server, so it costs the app nothing.
+        if jet.animation(forKey: "flicker") == nil {
+            let a = CAKeyframeAnimation(keyPath: "transform.scale.y")
+            a.values = [1, 0.8, 1.1, 0.88, 1.05, 0.92, 1]
+            a.duration = 0.36
+            a.repeatCount = .infinity
+            jet.add(a, forKey: "flicker")
+            let glow = CAKeyframeAnimation(keyPath: "opacity")
+            glow.values = [1, 0.75, 1, 0.85, 1]
+            glow.duration = 0.27
+            glow.repeatCount = .infinity
+            jetCore.add(glow, forKey: "flicker")
+        }
+    }
+
+    private func applyDetails(_ list: [StylePack.Layer], palette: Palette) {
+        while details.count < list.count {
+            let l = CAShapeLayer()
+            l.contentsScale = contentsScale
+            l.anchorPoint = CGPoint(x: 0.5, y: 0.5)
+            l.bounds = .zero
+            l.position = .zero
+            front.addSublayer(l)
+            details.append(l)
+        }
+        while details.count > list.count { details.removeLast().removeFromSuperlayer() }
+        for (layer, d) in zip(details, list) {
+            layer.path = d.path
+            layer.fillColor = d.color.resolved(palette)
+            layer.fillRule = d.evenOdd ? .evenOdd : .nonZero
+        }
     }
 
     private func fade(_ g: CAGradientLayer, _ c: CGColor) {
@@ -113,12 +172,15 @@ public final class ClickEffect {
     private let ripple = CAShapeLayer()
     private var stamp: CAShapeLayer?
     private var stampRotation: CGFloat = 0
-    private var particles: [(layer: CALayer, dir: CGVector, spin: CGFloat, dist: CGFloat)] = []
+    private var particles:
+        [(layer: CALayer, dir: CGVector, face: CGFloat, spin: CGFloat, dist: CGFloat)] = []
+    /// How far out particles start: just outside the ripple, or at the click point.
+    private var particleStart: CGFloat = 14
     private let intensity: CGFloat
     private let scale: CGFloat
 
     public init(
-        tip: CGPoint, angle: CGFloat, art: SkinArt, palette: Palette,
+        tip: CGPoint, angle: CGFloat, pack: StylePack, palette: Palette,
         intensity: CGFloat, scale: CGFloat, contentsScale: CGFloat, start: CFTimeInterval,
         seed: UInt64? = nil
     ) {
@@ -131,13 +193,13 @@ public final class ClickEffect {
         layer.position = tip
         layer.contentsScale = contentsScale
 
-        if let path = art.stamp {
+        if let print = pack.click.stamp {
             let s = CAShapeLayer()
             s.contentsScale = contentsScale
-            s.path = path
+            s.path = print.path
             s.fillColor = palette.effect
             // Print lands where the pads are: below the tip, along the leg.
-            let off = art.stampOffsetY * scale
+            let off = print.offset * scale
             s.position = CGPoint(x: -sin(angle) * off, y: cos(angle) * off)
             stampRotation = angle + .random(in: -0.25...0.25, using: &rng)
             layer.addSublayer(s)
@@ -146,17 +208,21 @@ public final class ClickEffect {
 
         ripple.contentsScale = contentsScale
         ripple.fillColor = nil
-        ripple.strokeColor = art.isRing ? art.particleColor : palette.effect
+        ripple.strokeColor = pack.click.ripple?.resolved(palette) ?? palette.effect
         layer.addSublayer(ripple)
 
-        let count = intensity >= 1.4 ? Int((intensity * 3).rounded()) : 0
+        let spec = pack.click.particles
+        let count = spec.map { Self.particleCount(minimum: $0.minimum, intensity: intensity) } ?? 0
+        if spec?.fromCenter == true { particleStart = 3 }
+        let outward = spec?.facesOutward == true
         for i in 0..<count {
+            guard let spec else { break }
             let a = CGFloat(i) / CGFloat(count) * 2 * .pi + .random(in: -0.3...0.3, using: &rng)
             // Outline trick: a stroked copy behind the fill gives one clean outer edge.
             let p = CALayer()
             p.bounds = .zero
-            let path = Skins.particlePath(art.particle)
-            if art.particle != .dot {
+            let path = spec.path
+            if spec.outlined {
                 let back = CAShapeLayer()
                 back.contentsScale = contentsScale
                 back.path = path
@@ -169,13 +235,15 @@ public final class ClickEffect {
             let front = CAShapeLayer()
             front.contentsScale = contentsScale
             front.path = path
-            front.fillColor = art.particleColor
+            front.fillColor = spec.color.resolved(palette)
             p.addSublayer(front)
             layer.addSublayer(p)
             particles.append(
                 (
                     p, CGVector(dx: cos(a), dy: sin(a)),
-                    .random(in: -4...4, using: &rng),
+                    // Facing outward: the art's "up" points the way it flies, with no spin.
+                    outward ? a - .pi / 2 : 0,
+                    outward ? 0 : .random(in: -4...4, using: &rng),
                     .random(in: 24...36, using: &rng) + 10 * intensity
                 ))
         }
@@ -201,13 +269,23 @@ public final class ClickEffect {
 
         let k = min(t / 0.7, 1)
         for p in particles {
-            let d = (14 + p.dist * easeOut(k)) * scale
+            let d = (particleStart + p.dist * easeOut(k)) * scale
             p.layer.position = CGPoint(x: p.dir.dx * d, y: p.dir.dy * d)
             p.layer.setAffineTransform(
-                CGAffineTransform(rotationAngle: p.spin * k).scaledBy(x: scale, y: scale))
+                CGAffineTransform(rotationAngle: p.face + p.spin * k).scaledBy(
+                    x: scale, y: scale))
             p.layer.opacity = Float(1 - k * k)
         }
     }
+
+    /// Particles per click: the style's minimum, or more when clicking fast.
+    static func particleCount(minimum: Int, intensity: CGFloat) -> Int {
+        let fast = intensity >= 1.4 ? Int((intensity * 3).rounded()) : 0
+        return max(minimum, fast)
+    }
+
+    /// Particle layers, for tests.
+    var particleLayers: [CALayer] { particles.map(\.layer) }
 
     /// Returns false (and removes itself) once finished.
     public func update(now: CFTimeInterval) -> Bool {

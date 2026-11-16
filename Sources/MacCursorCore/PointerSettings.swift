@@ -6,20 +6,6 @@ public protocol SettingsStore: AnyObject {
     func set(_ value: Any?, forKey key: String)
 }
 
-/// The pointer styles. The art for each lives in MacCursorRender.
-public enum PointerStyle: String, CaseIterable, Sendable {
-    case dogPaw, catPaw, finger, ring
-
-    public var title: String {
-        switch self {
-        case .dogPaw: return "Dog paw"
-        case .catPaw: return "Cat paw"
-        case .finger: return "Cartoon hand"
-        case .ring: return "Highlight ring"
-        }
-    }
-}
-
 public enum ColorMode: String, CaseIterable, Sendable {
     case auto, darkPointer, lightPointer
 
@@ -44,6 +30,8 @@ public final class PointerSettings {
     public static let defaultSize = 0.75
     public static let tailLengthRange: ClosedRange<Double> = 0...1
     public static let defaultTailLength = 1.0
+    /// The built-in dog paw. Style ids are pack ids (`style.json`'s `id`).
+    public static let defaultStyleID = "dogPaw"
 
     private let store: SettingsStore
 
@@ -58,9 +46,16 @@ public final class PointerSettings {
         static let hidesSystemCursor = "hideSystemCursor"
     }
 
-    public var style: PointerStyle {
-        get { (store.object(forKey: Key.style) as? String).flatMap(PointerStyle.init) ?? .dogPaw }
-        set { store.set(newValue.rawValue, forKey: Key.style) }
+    /// The chosen style pack's id. Kept even while that pack is missing or broken, so fixing or
+    /// reinstalling it brings it back; the app shows the dog paw meanwhile.
+    public var styleID: String {
+        get {
+            guard let id = store.object(forKey: Key.style) as? String, !id.isEmpty else {
+                return Self.defaultStyleID
+            }
+            return id
+        }
+        set { store.set(newValue, forKey: Key.style) }
     }
 
     /// Multiplier on the base art size.

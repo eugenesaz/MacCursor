@@ -1,0 +1,22 @@
+{
+  "format": 1,
+  "id": "finger",
+  "name": "Cartoon hand",
+  "author": "MacCursor",
+  "license": "MIT",
+  "version": "1.0.0",
+  "art": "art.svg",
+  "hotspot": [60, 20],
+  "body": { "art": "body", "color": "#FFFFFF" },
+  "details": [
+    { "art": "shading", "color": "#DADADA" },
+    { "art": "ink", "color": "#141414" }
+  ],
+  "tail": {
+    "leg": { "width": 22, "join": [65, 96], "color": "#8A8A8A" }
+  },
+  "click": {
+    "stamp": { "art": "stamp", "offset": 5 },
+    "particles": { "art": "dot", "color": "#9E9E9E" }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "format": 1,
+  "id": "test.rocket",
+  "name": "Rocket",
+  "author": "MacCursor tests",
+  "license": "CC0-1.0",
+  "version": "1.0.0",
+  "art": "art.svg",
+  "hotspot": [40, 6],
+  "body": { "art": "body", "color": "#E9EEF5" },
+  "details": [
+    { "art": "window", "color": "#4FC3F7" },
+    { "art": "stripe", "color": "#E53935" }
+  ],
+  "tail": {
+    "jet": { "flame": "flame", "core": "core", "color": "#FF7A1AE6", "coreColor": "#FFE08A", "join": [40, 52] }
+  },
+  "click": {
+    "particles": {
+      "art": "dart", "color": "#FFB300",
+      "facing": "outward", "origin": "center", "minimum": 8
+    }
+  },
+  "darkScreens": { "body": "#C9D3DE", "details": ["#81D4FA", null] }
+}

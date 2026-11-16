@@ -24,6 +24,9 @@ BIN="$(swift build -c release --show-bin-path)/MacCursor"
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Frameworks"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
+# Built-in style packs (style.json + art.svg per folder).
+mkdir -p "$APP/Contents/Resources"
+ditto Resources/Styles "$APP/Contents/Resources/Styles"
 if [ -n "${VERSION:-}" ]; then
   /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" \
     -c "Set :CFBundleVersion $VERSION" "$APP/Contents/Info.plist"

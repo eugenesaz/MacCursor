@@ -1,0 +1,12 @@
+{
+  "format": 1,
+  "id": "test.broken",
+  "name": "Broken on purpose",
+  "author": "MacCursor tests",
+  "license": "CC0-1.0",
+  "art": "art.svg",
+  "hotspot": [10, 0],
+  "body": { "art": "paw", "color": "tan" },
+  "tail": { "leg": { "width": "wide", "join": [10, 20], "color": "#000" } },
+  "sparkle": true
+}

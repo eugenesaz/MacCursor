@@ -89,12 +89,12 @@ final class Overlay {
     }
 
     func addEffect(
-        at mouse: CGPoint, art: SkinArt, palette: Palette, intensity: CGFloat, scale: CGFloat,
+        at mouse: CGPoint, pack: StylePack, palette: Palette, intensity: CGFloat, scale: CGFloat,
         now: CFTimeInterval
     ) {
         let p = local(mouse)
         let fx = ClickEffect(
-            tip: p, angle: angle(at: p), art: art, palette: palette,
+            tip: p, angle: angle(at: p), pack: pack, palette: palette,
             intensity: intensity, scale: scale, contentsScale: backingScale, start: now)
         effectsLayer.addSublayer(fx.layer)
         effects.append(fx)
@@ -138,7 +138,7 @@ final class OverlayController {
     private var clickTimes: [CFTimeInterval] = []
     private var lastClick: CFTimeInterval = -10
     private var lastIntensity: CGFloat = 1
-    private var art = Skins.art(for: .dogPaw)
+    private var pack = StyleStore.shared.pack(for: Settings.shared.pointer.styleID)
     private var activePalette = Palette.forLightScreens
     private var mouseWatch: Timer?
     private var lastWatchedMouse = CGPoint(x: -1, y: -1)
@@ -230,7 +230,7 @@ final class OverlayController {
 
     /// Re-read skin / color settings.
     func refreshStyle() {
-        art = Skins.art(for: settings.pointer.style)
+        pack = StyleStore.shared.pack(for: settings.pointer.styleID)
         activePalette = settings.resolvedPalette()
         lastSystemDark = Settings.systemIsDark()
         applyRig()
@@ -242,7 +242,7 @@ final class OverlayController {
     func applyRig() {
         for overlay in overlays {
             overlay.rig.apply(
-                art: art, palette: activePalette,
+                pack: pack, palette: activePalette,
                 tailLength: CGFloat(settings.pointer.tailLength))
             overlay.invalidatePose()
         }
@@ -253,7 +253,7 @@ final class OverlayController {
             CursorPolicy.hidesSystemCursor(
                 pointerOn: isEnabled && !sessionInactive,
                 settingOn: settings.pointer.hidesSystemCursor,
-                style: settings.pointer.style))
+                styleIsOverlay: pack.overlay))
     }
 
     /// Display changes arrive in bursts (one per display and property); rebuild once after.
@@ -335,7 +335,7 @@ final class OverlayController {
         let now = CACurrentMediaTime()
         let t = now - lastClick
         let squash =
-            art.isRing
+            pack.overlay
             ? 0 : t < 0.2 ? CGFloat(sin(.pi * t / 0.2)) * min(1, 0.6 + 0.2 * lastIntensity) : 0
         let mouse = NSEvent.mouseLocation
         overlay.update(
@@ -356,7 +356,8 @@ final class OverlayController {
         CATransaction.setDisableActions(true)
         activeOverlay(for: mouse)?
             .addEffect(
-                at: mouse, art: art, palette: activePalette, intensity: lastIntensity, scale: scale,
+                at: mouse, pack: pack, palette: activePalette, intensity: lastIntensity,
+                scale: scale,
                 now: now)
         CATransaction.commit()
         if settings.sound, let s = NSSound(named: "Pop")?.copy() as? NSSound {

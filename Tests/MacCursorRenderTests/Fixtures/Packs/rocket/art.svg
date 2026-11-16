@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 90">
+  <title>Rocket (test fixture)</title>
+  <!-- Body: nose cone and fuselage with two fins. The tip at (40, 6) is the click point. -->
+  <g id="body" fill="#E9EEF5">
+    <path d="M40 6 C50 16 54 30 52 52 L28 52 C26 30 30 16 40 6 Z"/>
+    <path d="M29 38 L29 54 L18 58 Z"/>
+    <path d="M51 38 L62 58 L51 54 Z"/>
+  </g>
+  <circle id="window" cx="40" cy="28" r="6" fill="#4FC3F7"/>
+  <rect id="stripe" x="29" y="44" width="22" height="4" fill="#E53935"/>
+  <!-- Jet flame and its core, attached at (40, 52). -->
+  <path id="flame" fill="#FF7A1A" d="M33 50 C33 62 37 74 40 86 C43 74 47 62 47 50 Z"/>
+  <path id="core" fill="#FFE08A" d="M36.5 50 C36.5 58 38.5 66 40 74 C41.5 66 43.5 58 43.5 50 Z"/>
+  <!-- Click particle: a small dart centred on the tip, pointing up. Hidden in editors. -->
+  <path id="dart" display="none" fill="#FFB300" d="M40 0 L44 10 L40 8 L36 10 Z"/>
+</svg>

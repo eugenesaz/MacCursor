@@ -12,6 +12,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var pointer: PointerController { controller }
     private let settings = Settings.shared
     private let updater = Updater()
+    private lazy var installer = StyleInstaller(
+        select: { [weak self] id in self?.pointer.styleID = id },
+        showProblems: { [weak self] title, message, lines in
+            self?.showProblems(title: title, message: message, lines: lines)
+        })
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
@@ -28,6 +33,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             [weak self] in
             self?.togglePresentation()
         }
+        StyleStore.shared.onChange = { [weak self] in self?.controller.refreshStyle() }
+        StyleStore.shared.start()
         pointer.setEnabled(true)
     }
 
@@ -60,7 +67,43 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc private func pickSkin(_ sender: NSMenuItem) {
-        pointer.style = PointerStyle(rawValue: sender.representedObject as! String)!
+        guard let id = sender.representedObject as? String else { return }
+        pointer.styleID = id
+    }
+
+    @objc private func openStylesFolder() { StyleStore.shared.openFolder() }
+
+    @objc private func importStyle() { installer.importStyle() }
+
+    @objc private func removeStyle() { installer.removeStyle(currentID: pointer.styleID) }
+
+    @objc private func showStyleProblems() {
+        let failures = StyleStore.shared.library.failures
+        showProblems(
+            title: "Some styles couldn't load",
+            message:
+                "Fix these in the style's files; MacCursor picks up the change as soon as you save.",
+            lines: failures.flatMap(\.messages))
+    }
+
+    /// An alert with a scrolling, selectable list, so problems can be copied.
+    func showProblems(title: String, message: String, lines: [String]) {
+        let alert = NSAlert()
+        alert.messageText = title
+        alert.informativeText = message
+        let scroll = NSScrollView(frame: NSRect(x: 0, y: 0, width: 460, height: 160))
+        scroll.hasVerticalScroller = true
+        scroll.borderType = .bezelBorder
+        let text = NSTextView(frame: scroll.bounds)
+        text.isEditable = false
+        text.isSelectable = true
+        text.font = .monospacedSystemFont(ofSize: 11, weight: .regular)
+        text.string = lines.joined(separator: "\n")
+        text.autoresizingMask = [.width]
+        scroll.documentView = text
+        alert.accessoryView = scroll
+        NSApp.activate(ignoringOtherApps: true)
+        alert.runModal()
     }
 
     @objc private func pickMood(_ sender: NSMenuItem) {
@@ -110,12 +153,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         menu.addItem(.separator())
         menu.addItem(header("Style"))
-        for kind in PointerStyle.allCases {
-            let i = item(kind.title, #selector(pickSkin(_:)))
-            i.representedObject = kind.rawValue
-            i.state = pointer.style == kind ? .on : .off
+        let library = StyleStore.shared.library
+        let current = library.resolved(id: pointer.styleID).id
+        for (n, pack) in library.all.enumerated() {
+            if n == library.builtins.count { menu.addItem(.separator()) }
+            let i = item(pack.name, #selector(pickSkin(_:)))
+            i.representedObject = pack.id
+            i.state = pack.id == current ? .on : .off
+            if !pack.author.isEmpty && !library.isBuiltin(id: pack.id) {
+                i.toolTip = "By \(pack.author) · \(pack.license)"
+            }
             menu.addItem(i)
         }
+        let failed = library.failures.count
+        if failed > 0 {
+            let title = "\(failed) style\(failed == 1 ? "" : "s") couldn't load…"
+            menu.addItem(item(title, #selector(showStyleProblems)))
+        }
+        menu.addItem(item("Import Style…", #selector(importStyle)))
+        if !library.user.isEmpty {
+            menu.addItem(item("Remove Style…", #selector(removeStyle)))
+        }
+        menu.addItem(item("Open Styles Folder", #selector(openStylesFolder)))
 
         menu.addItem(header("Size"))
         menu.addItem(

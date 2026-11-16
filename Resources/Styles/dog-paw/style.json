@@ -1,0 +1,22 @@
+{
+  "format": 1,
+  "id": "dogPaw",
+  "name": "Dog paw",
+  "author": "MacCursor",
+  "license": "MIT",
+  "version": "1.0.0",
+  "art": "art.svg",
+  "hotspot": [60, 20],
+  "body": { "art": "body", "color": "#E8C08A" },
+  "details": [
+    { "art": "pads", "color": "#4A322B" },
+    { "art": "nails", "color": "#2B1E1A" }
+  ],
+  "tail": {
+    "leg": { "width": 24, "join": [60, 70], "color": "#E8C08A" }
+  },
+  "click": {
+    "stamp": { "art": "stamp", "offset": 26 },
+    "particles": { "art": "particle", "color": "#FFF6E5" }
+  }
+}

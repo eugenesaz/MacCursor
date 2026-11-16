@@ -4,60 +4,68 @@ import Testing
 
 @testable import MacCursorRender
 
-@Suite struct StyleCatalogTests {
-    @Test(arguments: PointerStyle.allCases)
-    func everyStyleHasArt(style: PointerStyle) {
-        let art = Skins.art(for: style)
-        #expect(!art.silhouette.boundingBoxOfPath.isEmpty)
+@Suite struct BuiltinStyleTests {
+    static let ids = StyleLibrary.builtinOrder
+    static let replacingArrow = ["dogPaw", "catPaw", "finger"]
+
+    @Test(arguments: Self.ids)
+    func everyStyleHasArt(id: String) {
+        let art = BuiltinPacks.pack(id)
+        #expect(!art.name.isEmpty && art.license == "MIT")
+        #expect(!art.body.path.boundingBoxOfPath.isEmpty)
     }
 
     /// The click point is the top center of the art: the highest point of the silhouette is
     /// at y = 0 within 1 pt, nothing is drawn above it, and the art is solid just below it.
     /// (Paws click between the two middle toes, so their notch leaves up to 6 pt there.)
-    @Test(arguments: PointerStyle.allCases.filter { !$0.keepsSystemCursor })
-    func tipIsTheHotspot(style: PointerStyle) {
-        let path = Skins.art(for: style).silhouette
+    @Test(arguments: Self.replacingArrow)
+    func tipIsTheHotspot(id: String) {
+        let path = BuiltinPacks.pack(id).body.path
         #expect(abs(path.boundingBoxOfPath.maxY) <= 1)
         #expect(!path.contains(CGPoint(x: 0, y: 1.5)))
         #expect(path.contains(CGPoint(x: 0, y: -6)))
     }
 
     @Test func fingerTipIsExact() {
-        let path = Skins.art(for: .finger).silhouette
+        let path = BuiltinPacks.pack("finger").body.path
         #expect(path.contains(CGPoint(x: 0, y: -1)))
     }
 
     @Test func ringIsCenteredOnTheHotspot() {
-        let box = Skins.art(for: .ring).silhouette.boundingBoxOfPath
+        let box = BuiltinPacks.pack("ring").body.path.boundingBoxOfPath
         #expect(abs(box.midX) <= 0.5 && abs(box.midY) <= 0.5)
     }
 
     /// Styles with a leg attach it below the paw; the ring has none.
-    @Test(arguments: PointerStyle.allCases)
-    func legMatchesTheStyle(style: PointerStyle) {
-        let art = Skins.art(for: style)
-        if style.keepsSystemCursor {
-            #expect(art.armWidth == 0)
+    @Test(arguments: Self.ids)
+    func legMatchesTheStyle(id: String) throws {
+        let art = BuiltinPacks.pack(id)
+        #expect(art.overlay == !Self.replacingArrow.contains(id))
+        if art.overlay {
+            #expect(art.leg == nil)
         } else {
-            #expect(art.armWidth > 0)
-            #expect(art.armTop < 0)
-            #expect(art.armTop >= art.silhouette.boundingBoxOfPath.minY)
+            let leg = try #require(art.leg)
+            #expect(leg.width > 0)
+            #expect(leg.join.y < 0)
+            #expect(leg.join.y >= art.body.path.boundingBoxOfPath.minY)
         }
     }
 
     /// The leg is centred under the art where it joins (the paw or the cuff), and its
     /// top corners are hidden inside it, so it doesn't look shifted to one side.
-    @Test(arguments: PointerStyle.allCases.filter { !$0.keepsSystemCursor })
-    func legIsCentredWhereItJoins(style: PointerStyle) throws {
-        let art = Skins.art(for: style)
-        let y = art.armTop + 1
-        let box = art.silhouette.boundingBoxOfPath
+    @Test(arguments: Self.replacingArrow)
+    func legIsCentredWhereItJoins(id: String) throws {
+        let art = BuiltinPacks.pack(id)
+        let leg = try #require(art.leg)
+        let y = leg.join.y + 1
+        let silhouette = art.body.path
+        let box = silhouette.boundingBoxOfPath
         let xs = stride(from: box.minX, through: box.maxX, by: 0.25)
-            .filter { art.silhouette.contains(CGPoint(x: $0, y: y)) }
+            .filter { silhouette.contains(CGPoint(x: $0, y: y)) }
         let left = try #require(xs.first)
         let right = try #require(xs.last)
-        #expect(abs(art.armX - (left + right) / 2) <= 1, "\(style): art spans \(left)…\(right)")
-        #expect(left < art.armX - art.armWidth / 2 && art.armX + art.armWidth / 2 < right)
+        #expect(abs(leg.join.x - (left + right) / 2) <= 1, "\(id): art spans \(left)…\(right)")
+        #expect(left < leg.join.x - leg.width / 2 && leg.join.x + leg.width / 2 < right)
     }
 
     /// Both palettes exist and contrast with each other, so each reads on its background.
@@ -72,9 +80,11 @@ import Testing
 
     /// The cartoon hand is black and white only: every color it draws with is a grey.
     @Test func cartoonHandIsGrayscale() {
-        let art = Skins.art(for: .finger)
-        let colors = [art.fur, art.padColor, art.nailColor, art.particleColor, art.legColor]
-        for case let c? in colors {
+        let art = BuiltinPacks.pack("finger")
+        let colors =
+            [art.body.color] + art.details.map(\.color)
+            + [art.click.particles?.color, art.leg?.color].compactMap { $0 }
+        for c in colors.flatMap({ [$0.forLightScreens, $0.forDarkScreens] }) {
             let p = c.converted(
                 to: CGColorSpace(name: CGColorSpace.sRGB)!, intent: .defaultIntent, options: nil)!
                 .components!

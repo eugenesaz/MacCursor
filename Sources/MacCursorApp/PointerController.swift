@@ -9,7 +9,8 @@ protocol PointerController: AnyObject {
     var isEnabled: Bool { get }
     func setEnabled(_ on: Bool)
 
-    var style: PointerStyle { get set }
+    /// The chosen style pack's id. A missing pack draws the dog paw but keeps the id.
+    var styleID: String { get set }
     /// 0.4…1.6; out-of-range values are clamped.
     var size: Double { get set }
     /// 0…1 share of the full leg/sleeve; 0 = no tail. Out-of-range values are clamped.
@@ -24,10 +25,10 @@ protocol PointerController: AnyObject {
 }
 
 extension OverlayController: PointerController {
-    var style: PointerStyle {
-        get { settings.pointer.style }
+    var styleID: String {
+        get { settings.pointer.styleID }
         set {
-            settings.pointer.style = newValue
+            settings.pointer.styleID = newValue
             refreshStyle()
         }
     }

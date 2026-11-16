@@ -23,7 +23,7 @@ A free, open-source macOS menu bar app that makes your cursor impossible to miss
 
 1. Download `MacCursor-X.Y.Z.zip` from the [latest release](https://github.com/eugenesaz/MacCursor/releases/latest) and open it.
 2. Move **MacCursor** to `Applications` (or `~/Applications` in your home folder, which lets updates install without an admin password).
-3. Open it. macOS says it can't check the app for malware, because MacCursor is free and isn't notarized by Apple (that needs a paid developer account). Go to **System Settings › Privacy & Security**, scroll down and click **Open Anyway**. You only do this once.
+3. Open it. macOS says **"MacCursor.app" Not Opened**, because MacCursor is free and isn't notarized by Apple (that needs a paid developer account). Click **Done** (not Move to Trash), then go to **System Settings › Privacy & Security**, scroll down and click **Open Anyway**. You only do this once.
 
 Requires macOS 26 or later.
 

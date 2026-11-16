@@ -1,7 +1,7 @@
 import CoreGraphics
 
 extension Skins {
-    static var cartoonHand: SkinArt {
+    static var cartoonHand: StylePack {
         // A classic cartoon glove, black and white, back of the hand toward the
         // viewer: index finger pointing straight up, a broad thumb sticking out to
         // the left, the other fingers curled down so only their knuckles show as two
@@ -79,14 +79,14 @@ extension Skins {
             print.addPath(i == 2 ? ring : stroke(ring, 1.3))
         }
 
-        return SkinArt(
-            silhouette: silhouette,
-            fur: rgb(0xFFFFFF),
-            pads: shade, padColor: rgb(0xDADADA),
-            nails: ink, nailColor: rgb(0x141414),
-            armWidth: 22, armTop: -76, armX: 5,
-            stamp: print, stampOffsetY: -5,
-            particle: .dot, particleColor: rgb(0x9E9E9E),
-            legColor: rgb(0x8A8A8A))
+        return StylePack(
+            id: "finger", name: "Cartoon hand",
+            body: .init(silhouette, rgb(0xFFFFFF)),
+            details: [.init(shade, rgb(0xDADADA)), .init(ink, rgb(0x141414))],
+            tail: .leg(.init(width: 22, join: CGPoint(x: 5, y: -76), color: .init(rgb(0x8A8A8A)))),
+            click: .init(
+                stamp: .init(print, offset: -5),
+                particles: .init(
+                    Skins.particlePath(.dot), color: .init(rgb(0x9E9E9E)), outlined: false)))
     }
 }

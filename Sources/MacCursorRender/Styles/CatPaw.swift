@@ -1,7 +1,7 @@
 import CoreGraphics
 
 extension Skins {
-    static var catPaw: SkinArt {
+    static var catPaw: StylePack {
         // A black cat's paw: four small oval toes in a tight arc, bright pink toe beans,
         // a three-lobed main pad, slim claws peeking out of the toes and a slim leg.
         // Paws point up, so the pad's three lobes face the wrist.
@@ -61,13 +61,17 @@ extension Skins {
 
         // Drawn small, then scaled about the tip: a bit smaller than the dog paw.
         let k: CGFloat = 1.15
-        return SkinArt(
-            silhouette: moved(paw, dy: 0, scale: k),
-            fur: rgb(0x1E1E22),
-            pads: moved(pads, dy: 0, scale: k), padColor: rgb(0xFF8FB3),
-            nails: moved(claws, dy: 0, scale: k), nailColor: rgb(0xC9CAD2),
-            armWidth: 14 * k, armTop: -36 * k,
-            stamp: moved(pads, dy: 18, scale: 0.9 * k), stampOffsetY: -16 * k,
-            particle: .heart, particleColor: rgb(0xFF4D73))
+        let fur = StylePack.Color(rgb(0x1E1E22))
+        return StylePack(
+            id: "catPaw", name: "Cat paw",
+            body: .init(moved(paw, dy: 0, scale: k), fur),
+            details: [
+                .init(moved(pads, dy: 0, scale: k), rgb(0xFF8FB3)),
+                .init(moved(claws, dy: 0, scale: k), rgb(0xC9CAD2)),
+            ],
+            tail: .leg(.init(width: 14 * k, join: CGPoint(x: 0, y: -36 * k), color: fur)),
+            click: .init(
+                stamp: .init(moved(pads, dy: 18, scale: 0.9 * k), offset: -16 * k),
+                particles: .init(Skins.particlePath(.heart), color: .init(rgb(0xFF4D73)))))
     }
 }

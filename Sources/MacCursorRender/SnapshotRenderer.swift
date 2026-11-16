@@ -33,7 +33,7 @@ public enum SnapshotRenderer {
                     Case(style: style, palette: palette, size: $0, click: false)
                 }
                     + [Case(style: style, palette: palette, size: 0.75, click: true)]
-                    + (Skins.art(for: style).armWidth > 0 ? [0, 0.2] : []).map {
+                    + (Skins.art(for: style).hasTail ? [0, 0.2] : []).map {
                         Case(
                             style: style, palette: palette, size: 0.75, click: false,
                             tailLength: $0)
@@ -63,22 +63,22 @@ public enum SnapshotRenderer {
         root.bounds = CGRect(origin: .zero, size: canvas)
         root.backgroundColor = c.palette == .forLightScreens ? rgb(0xF5F5F5) : rgb(0x262626)
 
-        let art = Skins.art(for: c.style)
+        let pack = Skins.art(for: c.style)
         // A shortened tail is drawn higher up, so all of it fits on the canvas.
         let tip = CGPoint(x: 120, y: c.tailLength < 1 ? 250 : 200)
         let angle: CGFloat = 18 * .pi / 180
         let scale = CGFloat(c.size)
         if c.click {
             let fx = ClickEffect(
-                tip: tip, angle: angle, art: art, palette: palette, intensity: 2.6,
+                tip: tip, angle: angle, pack: pack, palette: palette, intensity: 2.6,
                 scale: scale, contentsScale: pixelScale, start: 0, seed: 42)
             fx.render(t: 0.22)
             root.addSublayer(fx.layer)
         }
         let rig = PointerRig(contentsScale: pixelScale)
-        rig.apply(art: art, palette: palette, tailLength: CGFloat(c.tailLength))
+        rig.apply(pack: pack, palette: palette, tailLength: CGFloat(c.tailLength))
         rig.setPose(
-            position: tip, angle: angle, scale: scale, squash: c.click && !art.isRing ? 0.8 : 0)
+            position: tip, angle: angle, scale: scale, squash: c.click && !pack.overlay ? 0.8 : 0)
         root.addSublayer(rig.root)
 
         guard

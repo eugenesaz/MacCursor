@@ -3,46 +3,25 @@ import MacCursorCore
 
 /// Pointer styles. All art is original and drawn in code. Coordinates: the hotspot
 /// (fingertip / paw tip) is at (0,0) and the paw extends downward (negative y).
-public enum ParticleKind: Sendable { case bone, heart, dot }
-
-public struct SkinArt {
-    public var silhouette: CGPath
-    public var fur: CGColor
-    public var pads: CGPath? = nil
-    public var padColor: CGColor = rgb(0x000000)
-    public var nails: CGPath? = nil
-    public var nailColor: CGColor = rgb(0x000000)
-    /// 0 = no arm/leg.
-    public var armWidth: CGFloat = 0
-    /// Y where the leg attaches under the paw body.
-    public var armTop: CGFloat = 0
-    /// X of the leg's centre line, for art whose wrist isn't under the tip.
-    public var armX: CGFloat = 0
-    public var isRing = false
-    /// Paw print left behind on click, centered at (0,0).
-    public var stamp: CGPath? = nil
-    /// Where the paw print sits relative to the tip (before rotation).
-    public var stampOffsetY: CGFloat = 0
-    public var particle: ParticleKind = .dot
-    public var particleColor: CGColor = rgb(0xFFD23F)
-    /// Fill of the leg or arm; nil means the same as `fur`.
-    public var legColor: CGColor? = nil
-}
+enum ParticleKind: Sendable { case bone, heart, dot }
 
 /// Colors that depend on what's behind the pointer.
 /// CGColor is immutable, so sharing palettes across threads is safe.
 public struct Palette: @unchecked Sendable {
+    public let kind: PaletteKind
     public let outline: CGColor
     public let effect: CGColor
 
     /// Dark outline/effects: for light screens.
-    public static let forLightScreens = Palette(outline: rgb(0x141414), effect: rgb(0x141414))
+    public static let forLightScreens = Palette(
+        kind: .forLightScreens, outline: rgb(0x141414), effect: rgb(0x141414))
     /// Light outline/effects ("sticker" look): for dark screens.
     public static func of(_ kind: PaletteKind) -> Palette {
         kind == .forDarkScreens ? .forDarkScreens : .forLightScreens
     }
 
-    public static let forDarkScreens = Palette(outline: rgb(0xF4F4F4), effect: rgb(0xF4F4F4))
+    public static let forDarkScreens = Palette(
+        kind: .forDarkScreens, outline: rgb(0xF4F4F4), effect: rgb(0xF4F4F4))
 }
 
 public func rgb(_ hex: UInt32, _ alpha: CGFloat = 1) -> CGColor {
@@ -71,7 +50,7 @@ func moved(_ path: CGPath, dy: CGFloat, scale: CGFloat = 1) -> CGPath {
 public enum Skins {
     /// The registry of built-in styles. Each style's art lives in its own file in `Styles/`.
     /// Adding a style: a `PointerStyle` case, a file in `Styles/`, a line here, and snapshots.
-    public static func art(for kind: PointerStyle) -> SkinArt {
+    public static func art(for kind: PointerStyle) -> StylePack {
         switch kind {
         case .dogPaw: return dogPaw
         case .catPaw: return catPaw
@@ -80,7 +59,7 @@ public enum Skins {
         }
     }
 
-    public static func particlePath(_ kind: ParticleKind) -> CGPath {
+    static func particlePath(_ kind: ParticleKind) -> CGPath {
         switch kind {
         case .bone:
             let p = CGMutablePath()

@@ -8,7 +8,7 @@ import Testing
     @Test(arguments: PointerStyle.allCases)
     func everyStyleHasArt(style: PointerStyle) {
         let art = Skins.art(for: style)
-        #expect(!art.silhouette.boundingBoxOfPath.isEmpty)
+        #expect(!art.body.path.boundingBoxOfPath.isEmpty)
     }
 
     /// The click point is the top center of the art: the highest point of the silhouette is
@@ -16,32 +16,33 @@ import Testing
     /// (Paws click between the two middle toes, so their notch leaves up to 6 pt there.)
     @Test(arguments: PointerStyle.allCases.filter { !$0.keepsSystemCursor })
     func tipIsTheHotspot(style: PointerStyle) {
-        let path = Skins.art(for: style).silhouette
+        let path = Skins.art(for: style).body.path
         #expect(abs(path.boundingBoxOfPath.maxY) <= 1)
         #expect(!path.contains(CGPoint(x: 0, y: 1.5)))
         #expect(path.contains(CGPoint(x: 0, y: -6)))
     }
 
     @Test func fingerTipIsExact() {
-        let path = Skins.art(for: .finger).silhouette
+        let path = Skins.art(for: .finger).body.path
         #expect(path.contains(CGPoint(x: 0, y: -1)))
     }
 
     @Test func ringIsCenteredOnTheHotspot() {
-        let box = Skins.art(for: .ring).silhouette.boundingBoxOfPath
+        let box = Skins.art(for: .ring).body.path.boundingBoxOfPath
         #expect(abs(box.midX) <= 0.5 && abs(box.midY) <= 0.5)
     }
 
     /// Styles with a leg attach it below the paw; the ring has none.
     @Test(arguments: PointerStyle.allCases)
-    func legMatchesTheStyle(style: PointerStyle) {
+    func legMatchesTheStyle(style: PointerStyle) throws {
         let art = Skins.art(for: style)
         if style.keepsSystemCursor {
-            #expect(art.armWidth == 0)
+            #expect(art.leg == nil)
         } else {
-            #expect(art.armWidth > 0)
-            #expect(art.armTop < 0)
-            #expect(art.armTop >= art.silhouette.boundingBoxOfPath.minY)
+            let leg = try #require(art.leg)
+            #expect(leg.width > 0)
+            #expect(leg.join.y < 0)
+            #expect(leg.join.y >= art.body.path.boundingBoxOfPath.minY)
         }
     }
 
@@ -50,14 +51,16 @@ import Testing
     @Test(arguments: PointerStyle.allCases.filter { !$0.keepsSystemCursor })
     func legIsCentredWhereItJoins(style: PointerStyle) throws {
         let art = Skins.art(for: style)
-        let y = art.armTop + 1
-        let box = art.silhouette.boundingBoxOfPath
+        let leg = try #require(art.leg)
+        let y = leg.join.y + 1
+        let silhouette = art.body.path
+        let box = silhouette.boundingBoxOfPath
         let xs = stride(from: box.minX, through: box.maxX, by: 0.25)
-            .filter { art.silhouette.contains(CGPoint(x: $0, y: y)) }
+            .filter { silhouette.contains(CGPoint(x: $0, y: y)) }
         let left = try #require(xs.first)
         let right = try #require(xs.last)
-        #expect(abs(art.armX - (left + right) / 2) <= 1, "\(style): art spans \(left)…\(right)")
-        #expect(left < art.armX - art.armWidth / 2 && art.armX + art.armWidth / 2 < right)
+        #expect(abs(leg.join.x - (left + right) / 2) <= 1, "\(style): art spans \(left)…\(right)")
+        #expect(left < leg.join.x - leg.width / 2 && leg.join.x + leg.width / 2 < right)
     }
 
     /// Both palettes exist and contrast with each other, so each reads on its background.
@@ -73,8 +76,10 @@ import Testing
     /// The cartoon hand is black and white only: every color it draws with is a grey.
     @Test func cartoonHandIsGrayscale() {
         let art = Skins.art(for: .finger)
-        let colors = [art.fur, art.padColor, art.nailColor, art.particleColor, art.legColor]
-        for case let c? in colors {
+        let colors =
+            [art.body.color] + art.details.map(\.color)
+            + [art.click.particles?.color, art.leg?.color].compactMap { $0 }
+        for c in colors.flatMap({ [$0.forLightScreens, $0.forDarkScreens] }) {
             let p = c.converted(
                 to: CGColorSpace(name: CGColorSpace.sRGB)!, intent: .defaultIntent, options: nil)!
                 .components!

@@ -150,7 +150,10 @@ final class OverlayController {
     }
 
     func updateCursorVisibility() {
-        CursorHider.setHidden(isEnabled && settings.pointer.hidesSystemCursor && !art.isRing)
+        cursorHider.setHidden(
+            CursorPolicy.hidesSystemCursor(
+                pointerOn: isEnabled, settingOn: settings.pointer.hidesSystemCursor,
+                style: settings.pointer.style))
     }
 
     private func rebuild() {

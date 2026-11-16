@@ -3,7 +3,7 @@
 Notes for each release, written for people using MacCursor. The newest version is at the top.
 The section for a version is what the update dialog shows.
 
-## [Unreleased]
+## [0.3.2] - 2026-11-16
 
 - MacCursor has an app icon in Finder, the Applications folder and the Dock.
 - The menu bar icon is now an arrow pointer instead of a paw: highlighted when the pointer is

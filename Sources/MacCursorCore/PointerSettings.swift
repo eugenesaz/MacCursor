@@ -44,6 +44,7 @@ public final class PointerSettings {
         static let tailLength = "tailLength"
         static let colorMode = "colorMode"
         static let hidesSystemCursor = "hideSystemCursor"
+        static let animatesStyle = "animateStyle"
     }
 
     /// The chosen style pack's id. Kept even while that pack is missing or broken, so fixing or
@@ -96,6 +97,12 @@ public final class PointerSettings {
     public var hidesSystemCursor: Bool {
         get { store.object(forKey: Key.hidesSystemCursor) as? Bool ?? true }
         set { store.set(newValue, forKey: Key.hidesSystemCursor) }
+    }
+
+    /// Whether an animated style (e.g. a flickering jet flame) moves while the pointer is idle.
+    public var animatesStyle: Bool {
+        get { store.object(forKey: Key.animatesStyle) as? Bool ?? true }
+        set { store.set(newValue, forKey: Key.animatesStyle) }
     }
 
     public func paletteKind(systemIsDark: Bool) -> PaletteKind {

@@ -41,6 +41,8 @@ public struct StylePack: @unchecked Sendable {
 
     /// Whether the Tail slider changes this style.
     public var hasTail: Bool { tail != nil }
+    /// Moves on its own while the pointer is idle (the jet flame flickers).
+    public var isAnimated: Bool { jet != nil }
 
     public var jet: Jet? {
         if case .jet(let j) = tail { return j }

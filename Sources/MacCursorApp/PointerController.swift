@@ -17,6 +17,10 @@ protocol PointerController: AnyObject {
     var tailLength: Double { get set }
     var colorMode: ColorMode { get set }
     var hidesSystemCursor: Bool { get set }
+    /// Whether an animated style moves while idle.
+    var animatesStyle: Bool { get set }
+    /// The style being drawn moves on its own, so `animatesStyle` applies to it.
+    var styleIsAnimated: Bool { get }
 
     /// The palette in use right now (Auto resolved against the system appearance).
     var palette: Palette { get }
@@ -64,6 +68,16 @@ extension OverlayController: PointerController {
             updateCursorVisibility()
         }
     }
+
+    var animatesStyle: Bool {
+        get { settings.pointer.animatesStyle }
+        set {
+            settings.pointer.animatesStyle = newValue
+            applyRig()
+        }
+    }
+
+    var styleIsAnimated: Bool { StyleStore.shared.pack(for: styleID).isAnimated }
 
     var palette: Palette { settings.resolvedPalette() }
 

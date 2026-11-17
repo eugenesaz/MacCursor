@@ -210,6 +210,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         settings.draw.fadeSeconds = seconds
     }
 
+    @objc private func toggleAnimation() { pointer.animatesStyle.toggle() }
+
     @objc private func toggleHideCursor() {
         pointer.hidesSystemCursor.toggle()
     }
@@ -260,6 +262,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 i.toolTip = "By \(pack.author) · \(pack.license)"
             }
             menu.addItem(i)
+        }
+        if pointer.styleIsAnimated {
+            let animate = item("Animate style", #selector(toggleAnimation))
+            animate.state = pointer.animatesStyle ? .on : .off
+            menu.addItem(animate)
         }
         let failed = library.failures.count
         if failed > 0 {

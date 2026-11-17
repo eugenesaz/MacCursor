@@ -264,7 +264,8 @@ final class OverlayController {
         for overlay in overlays {
             overlay.rig.apply(
                 pack: pack, palette: activePalette,
-                tailLength: CGFloat(settings.pointer.tailLength))
+                tailLength: CGFloat(settings.pointer.tailLength),
+                animates: settings.pointer.animatesStyle)
             overlay.invalidatePose()
         }
     }

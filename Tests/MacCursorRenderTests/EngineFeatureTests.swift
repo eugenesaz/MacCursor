@@ -30,6 +30,22 @@ import Testing
         #expect(rig.jet.animation(forKey: "flicker") != nil)
     }
 
+    @Test func onlyStylesWithAJetAnimate() {
+        #expect(rocket.isAnimated)
+        #expect(!BuiltinPacks.pack("dogPaw").isAnimated)
+    }
+
+    @Test func animationOffStopsTheFlickerAndOnRestartsIt() {
+        let rig = PointerRig(contentsScale: 2)
+        rig.apply(pack: rocket, palette: .forLightScreens, animates: false)
+        #expect(!rig.jet.isHidden)
+        #expect(rig.jet.animation(forKey: "flicker") == nil)
+        rig.apply(pack: rocket, palette: .forLightScreens, animates: true)
+        #expect(rig.jet.animation(forKey: "flicker") != nil)
+        rig.apply(pack: rocket, palette: .forLightScreens, animates: false)
+        #expect(rig.jet.animation(forKey: "flicker") == nil)
+    }
+
     @Test func noTailHidesTheJet() {
         let rig = PointerRig(contentsScale: 2)
         rig.apply(pack: rocket, palette: .forLightScreens, tailLength: 0)

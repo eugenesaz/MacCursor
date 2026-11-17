@@ -19,6 +19,15 @@ final class MemoryStore: SettingsStore {
         #expect(settings.size == 0.75)
         #expect(settings.colorMode == .auto)
         #expect(settings.hidesSystemCursor == true)
+        #expect(settings.animatesStyle == true)
+    }
+
+    @Test func animationSettingPersists() {
+        settings.animatesStyle = false
+        #expect(PointerSettings(store: store).animatesStyle == false)
+        #expect(store.values["animateStyle"] as? Bool == false)
+        store.values["animateStyle"] = "no"
+        #expect(settings.animatesStyle == true)
     }
 
     @Test func valuesPersistInTheStore() {

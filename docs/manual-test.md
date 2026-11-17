@@ -24,6 +24,8 @@ Style: Dog paw, with "Hide system cursor" on.
 | H13 | Open MacCursor's own menu, hold still for 2 s, then move between items | The paw follows inside the menu (it never freezes) |
 | H14 | Lock the screen (⌃⌘Q), then unlock | The lock screen shows the normal arrow; after unlocking the paw is back and the arrow hidden again |
 | H15 | Switch to another user (fast user switching) and back | Same as H14 |
+| H16 | Open a dialog that floats above apps (a password or permission prompt, e.g. **System Settings ▸ Users & Groups ▸ Add User**) and move over it | The paw shows on top of the dialog |
+| H17 | Start the screen saver (hot corner, or `open -a ScreenSaverEngine`), then stop it | No paw over the screen saver; the paw is back afterwards |
 
 ## Displays
 Needs a second display.

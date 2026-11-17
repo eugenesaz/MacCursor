@@ -3,6 +3,11 @@
 Notes for each release, written for people using MacCursor. The newest version is at the top.
 The section for a version is what the update dialog shows.
 
+## [Unreleased]
+
+- The pointer no longer hides behind dialogs that float above other apps, such as system
+  prompts. It also steps aside while the screen saver runs.
+
 ## [0.5.0] - 2026-11-16
 
 - Clear the drawing by holding **⌘** and **right-clicking**, the same key you draw with. The

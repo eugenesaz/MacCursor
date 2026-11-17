@@ -3,7 +3,7 @@
 Notes for each release, written for people using MacCursor. The newest version is at the top.
 The section for a version is what the update dialog shows.
 
-## [Unreleased]
+## [0.5.2] - 2026-11-17
 
 - The menu is reorganized so it's easier to find your way around:
   - all styles, built-in and imported, are in one list;

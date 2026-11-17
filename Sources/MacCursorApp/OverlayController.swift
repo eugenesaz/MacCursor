@@ -29,7 +29,7 @@ final class Overlay {
         window.backgroundColor = .clear
         window.hasShadow = false
         window.ignoresMouseEvents = true
-        window.level = .screenSaver
+        window.level = OverlayLevel.pointer
         window.collectionBehavior = [
             .canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle,
         ]
@@ -148,8 +148,11 @@ final class OverlayController {
     private var activePalette = Palette.forLightScreens
     private var mouseWatch: Timer?
     private var lastWatchedMouse = CGPoint(x: -1, y: -1)
-    /// True while the screen is locked or another user's session is active.
-    private var sessionInactive = false
+    /// Why the pointer is off screen right now: locked, screen saver, another user's session.
+    private var inactiveReasons: Set<String> = []
+    /// True while the screen is locked, the screen saver runs or another user's session is
+    /// active.
+    private var sessionInactive: Bool { !inactiveReasons.isEmpty }
     private var lastSystemDark = false
     let settings = Settings.shared
     let presentation = PresentationMode()
@@ -297,6 +300,7 @@ final class OverlayController {
             Overlay(screen: screen) { [weak self] overlay in self?.frame(for: overlay) }
         }
         layout = DisplayLayout(frames: overlays.map(\.frame))
+        showOverlays()
         refreshStyle()
         log("overlays: \(overlays.count) display(s)")
     }
@@ -323,28 +327,52 @@ final class OverlayController {
         if !settings.draw.isOn { clearInk() }
     }
 
-    /// The lock screen and other sessions draw above our overlay, so they must get the
-    /// real arrow back.
+    /// The overlay floats above nearly everything, including the lock screen and the screen
+    /// saver, so it leaves the screen while they show, and the real arrow comes back.
     private func observeSession() {
         let workspace = NSWorkspace.shared.notificationCenter
         let distributed = DistributedNotificationCenter.default()
-        let inactive: [(NotificationCenter, Notification.Name)] = [
-            (workspace, NSWorkspace.sessionDidResignActiveNotification),
-            (distributed, Notification.Name("com.apple.screenIsLocked")),
+        // (center, start, end, reason)
+        let watches: [(NotificationCenter, String, String, String)] = [
+            (
+                workspace, NSWorkspace.sessionDidResignActiveNotification.rawValue,
+                NSWorkspace.sessionDidBecomeActiveNotification.rawValue, "session"
+            ),
+            (distributed, "com.apple.screenIsLocked", "com.apple.screenIsUnlocked", "locked"),
+            (
+                distributed, "com.apple.screensaver.didstart", "com.apple.screensaver.didstop",
+                "screen saver"
+            ),
         ]
-        let active: [(NotificationCenter, Notification.Name)] = [
-            (workspace, NSWorkspace.sessionDidBecomeActiveNotification),
-            (distributed, Notification.Name("com.apple.screenIsUnlocked")),
-        ]
-        for (center, name) in inactive + active {
-            let isInactive = inactive.contains { $0.1 == name }
-            center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
-                MainActor.assumeIsolated {
-                    guard let self else { return }
-                    self.sessionInactive = isInactive
-                    self.updateCursorVisibility()
-                    log("session \(isInactive ? "inactive: arrow back" : "active again")")
+        for (center, start, end, reason) in watches {
+            for (name, inactive) in [(start, true), (end, false)] {
+                center.addObserver(
+                    forName: Notification.Name(name), object: nil, queue: .main
+                ) { [weak self] _ in
+                    MainActor.assumeIsolated {
+                        guard let self else { return }
+                        if inactive {
+                            self.inactiveReasons.insert(reason)
+                        } else {
+                            self.inactiveReasons.remove(reason)
+                        }
+                        self.showOverlays()
+                        self.updateCursorVisibility()
+                        log("\(reason) \(inactive ? "began: pointer hidden" : "ended")")
+                    }
                 }
+            }
+        }
+    }
+
+    /// Puts the overlays on screen, or takes them off while the session is inactive.
+    private func showOverlays() {
+        for overlay in overlays {
+            if sessionInactive {
+                overlay.window.orderOut(nil)
+            } else {
+                overlay.window.orderFrontRegardless()
+                overlay.invalidatePose()
             }
         }
     }

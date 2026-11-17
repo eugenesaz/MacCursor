@@ -59,7 +59,7 @@ final class Toast {
         panel.ignoresMouseEvents = true
         panel.isReleasedWhenClosed = false
         // Above the pointer overlays, on every Space, including full-screen slide shows.
-        panel.level = NSWindow.Level(rawValue: NSWindow.Level.screenSaver.rawValue + 1)
+        panel.level = OverlayLevel.notice
         panel.collectionBehavior = [
             .canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle,
         ]

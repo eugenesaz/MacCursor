@@ -34,9 +34,9 @@ MacCursor checks for a new version once a day and asks before installing it. You
 
 ## Styles
 
-Get a style from a friend or online as a `.maccursorstyle` file, then choose **Import Style…** in
-MacCursor's menu. You see a preview first; the style is selected as soon as it's imported.
-**Remove Style…** moves one to the Trash.
+Get a style from a friend or online as a `.maccursorstyle` file, then choose
+**Manage Styles ▸ Import Style…** in MacCursor's menu. You see a preview first; the style is selected as soon as it's imported.
+**Manage Styles ▸ Remove Style…** moves one to the Trash.
 
 **Make your own:** draw it in any vector editor (Figma, Inkscape, Illustrator, Affinity) and
 follow [Making a style](docs/making-a-style.md). A style is just an SVG and a short `style.json`,

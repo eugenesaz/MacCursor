@@ -17,7 +17,7 @@ file next to them.
 To share a pack, turn the folder into one **`.maccursorstyle`** file with
 `MacCursor --pack my-style` (see [Tools](#tools)). That file is a standard zip holding
 `style.json` and the art file, at its root or inside one top-level folder. People add it with
-**Import Style…** in MacCursor's menu.
+**Manage Styles ▸ Import Style…** in MacCursor's menu.
 
 ## Coordinates
 
@@ -35,7 +35,7 @@ To share a pack, turn the folder into one **`.maccursorstyle`** file with
 |---|---|---|---|
 | `format` | number | yes | Always `1`. A higher number means the pack needs a newer MacCursor. |
 | `id` | text | yes | Unique id: starts with a letter, then letters, digits, `.`, `_` or `-`; at most 64 characters. Reverse-DNS style is a good habit: `com.yourname.cool-cursor`. The built-in ids (`dogPaw`, `catPaw`, `finger`, `ring`) are taken. |
-| `name` | text | yes | Shown in the Style menu. 1–40 characters. |
+| `name` | text | yes | Shown in the menu's style list. 1–40 characters. |
 | `author` | text | yes | Your name or handle. |
 | `license` | text | yes | An [SPDX id](https://spdx.org/licenses/) such as `CC0-1.0` or `MIT`, or `Proprietary`. See [CONTRIBUTING](../CONTRIBUTING.md) for what's allowed in public packs. |
 | `version` | text | no | Shown when someone replaces an installed copy, e.g. `1.0.0`. |

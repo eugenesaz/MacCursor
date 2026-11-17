@@ -3,6 +3,18 @@
 Notes for each release, written for people using MacCursor. The newest version is at the top.
 The section for a version is what the update dialog shows.
 
+## [Unreleased]
+
+- The menu is reorganized so it's easier to find your way around:
+  - all styles, built-in and imported, are in one list;
+  - **Animate** now sits right under the selected style, when that style can animate;
+  - **Import Style…**, **Remove Style…** and **Open Styles Folder** are under
+    **Manage Styles ▸**;
+  - Size, Tail, **Mood ▸**, Color ▸ and Hide system cursor are together under
+    **For all styles**, because they apply to whichever style you pick;
+  - in **Draw ▸**, the how-to hints are now at the bottom.
+- Nothing is removed, and your settings are kept.
+
 ## [0.5.1] - 2026-11-17
 
 - New **Animate style** switch in the menu, under the styles. It shows for styles that move on

@@ -5,6 +5,8 @@ The section for a version is what the update dialog shows.
 
 ## [Unreleased]
 
+- New **Animate style** switch in the menu, under the styles. It shows for styles that move on
+  their own, such as a flickering jet flame, and turns that motion off.
 - The pointer no longer hides behind dialogs that float above other apps, such as system
   prompts. It also steps aside while the screen saver runs.
 

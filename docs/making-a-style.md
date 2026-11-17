@@ -99,7 +99,8 @@ The template shows the common keys:
 
 - **Tail:** a `leg` reaching in from off-screen (set `join` to the middle of the art's bottom
   edge), a `jet` flame (add `"length": 560` to make it as long as a leg), or leave `tail`
-  out for none. The menu's Tail slider shortens it.
+  out for none. The menu's Tail slider shortens it. A jet flickers; **Animate style** in the
+  menu holds it still.
 - **Click:** `stamp` and `particles` are optional. `"facing": "outward"` makes particles point
   the way they fly; `"origin": "center"` starts them at the click; `"minimum": 8` fires 8 on
   every click instead of only when clicking fast.

@@ -52,7 +52,10 @@ public final class PointerRig {
     }
 
     /// - tailLength: 0…1 share of the full leg; 0 = no leg.
-    public func apply(pack: StylePack, palette: Palette, tailLength: CGFloat = 1) {
+    /// - animates: false holds an animated style still.
+    public func apply(
+        pack: StylePack, palette: Palette, tailLength: CGFloat = 1, animates: Bool = true
+    ) {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         defer { CATransaction.commit() }
@@ -76,7 +79,7 @@ public final class PointerRig {
             outline.lineJoin = .round
         }
         applyDetails(pack.details, palette: palette)
-        applyJet(pack.jet, palette: palette, length: tailLength)
+        applyJet(pack.jet, palette: palette, length: tailLength, animates: animates)
 
         let leg = tailLength > 0 ? pack.leg : nil
         for l in [legEdgeL, legEdgeR, legFill] { l.isHidden = leg == nil }
@@ -94,7 +97,9 @@ public final class PointerRig {
     }
 
     /// - length: the Tail slider's 0…1 share of the full flame; 0 = no flame.
-    private func applyJet(_ j: StylePack.Jet?, palette: Palette, length: CGFloat) {
+    private func applyJet(
+        _ j: StylePack.Jet?, palette: Palette, length: CGFloat, animates: Bool
+    ) {
         let shown = j != nil && length > 0
         jet.isHidden = !shown
         guard let j, shown else {
@@ -109,6 +114,11 @@ public final class PointerRig {
         jetFlame.fillColor = j.color.resolved(palette)
         jetCore.path = j.core.copy(using: &t)
         jetCore.fillColor = j.coreColor.resolved(palette)
+        guard animates else {
+            jet.removeAllAnimations()
+            jetCore.removeAllAnimations()
+            return
+        }
         // Flicker lengthwise; runs in the render server, so it costs the app nothing.
         if jet.animation(forKey: "flicker") == nil {
             let a = CAKeyframeAnimation(keyPath: "transform.scale.y")

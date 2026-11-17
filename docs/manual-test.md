@@ -113,6 +113,7 @@ Use the rocket test pack (`Tests/MacCursorRenderTests/Fixtures/Packs/rocket`) an
 | P5 | Break it: delete a closing `}` and save | The pointer shows the dog paw; the menu shows **1 style couldn't load…**; clicking it lists the JSON problem, copyable |
 | P6 | Fix it and save | Rocket comes back and is selected again, without picking it |
 | P7 | Rocket selected: drag the Tail slider; click slowly, then fast | The flame shortens to nothing at the far left and flickers; every click fires 8 darts from the centre, pointing outward; fast clicks fire more |
+| P8 | Rocket selected: untick **Animate style**, then tick it again; pick the Dog paw | The flame stops flickering and holds still, then flickers again; the switch is gone from the menu for the Dog paw, and comes back ticked as you left it when you return to the rocket |
 | P8 | Delete the rocket folder | It leaves the menu; the pointer shows the dog paw |
 | P9 | `$MC --pack docs/style-template`, download it again through Safari (so it's quarantined), **Import Style…** it | A preview with name, author, licence and version; **Import** selects it |
 | P10 | Import the same file again | The dialog says **Replace "My style" 1.0.0 with My style 1.0.0?** |

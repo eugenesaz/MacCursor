@@ -6,11 +6,11 @@ to anyone. The exact format is in [Style pack format](style-packs.md).
 
 ## 1. Start from the template
 
-1. In MacCursor's menu, choose **Open Styles Folder**. Finder opens
+1. In MacCursor's menu, choose **Manage Styles ▸ Open Styles Folder**. Finder opens
    `~/Library/Application Support/MacCursor/Styles/`.
 2. Copy the [template folder](style-template) into it and rename the copy, e.g. `cool-cursor`.
    (On GitHub, download the repository as a zip, or get `style-template.maccursorstyle` from the
-   latest release and import it with **Import Style…**: it then sits in the Styles folder as
+   latest release and import it with **Manage Styles ▸ Import Style…**: it then sits in the Styles folder as
    `com.example.my-style`.)
 3. Open `style.json` in a text editor and change `id` (e.g. `com.yourname.cool-cursor`) and
    `name` (what the menu shows, e.g. `Cool cursor`).
@@ -99,8 +99,8 @@ The template shows the common keys:
 
 - **Tail:** a `leg` reaching in from off-screen (set `join` to the middle of the art's bottom
   edge), a `jet` flame (add `"length": 560` to make it as long as a leg), or leave `tail`
-  out for none. The menu's Tail slider shortens it. A jet flickers; **Animate style** in the
-  menu holds it still.
+  out for none. The menu's Tail slider shortens it. A jet flickers; **Animate**, which the menu
+  shows under the selected style, holds it still.
 - **Click:** `stamp` and `particles` are optional. `"facing": "outward"` makes particles point
   the way they fly; `"origin": "center"` starts them at the click; `"minimum": 8` fires 8 on
   every click instead of only when clicking fast.
@@ -133,7 +133,7 @@ $MC --pack cool-cursor
 ```
 
 This writes `com.yourname.cool-cursor.maccursorstyle`. Send it to anyone with MacCursor: they
-choose **Import Style…** in the menu and pick the file. A newer version with the same `id`
+choose **Manage Styles ▸ Import Style…** in the menu and pick the file. A newer version with the same `id`
 replaces the old one (bump `version` so they can tell).
 
 You can also make the file by hand: zip `style.json` and `art.svg` (Finder's *Compress* works)

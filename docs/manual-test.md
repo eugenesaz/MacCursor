@@ -107,18 +107,18 @@ Use the rocket test pack (`Tests/MacCursorRenderTests/Fixtures/Packs/rocket`) an
 | # | Do | Expect |
 |---|---|---|
 | P1 | Update from v0.1.2 with each built-in style selected in turn | The same style is selected after the update, and looks the same |
-| P2 | **Open Styles Folder** | Finder opens `~/Library/Application Support/MacCursor/Styles/` (created if missing) |
-| P3 | Copy the rocket folder into it | **Rocket** appears in the Style menu after a separator within 2 s, without relaunching |
+| P2 | **Manage Styles ▸ Open Styles Folder** | Finder opens `~/Library/Application Support/MacCursor/Styles/` (created if missing) |
+| P3 | Copy the rocket folder into it | **Rocket** appears at the end of the style list, with no separator, within 2 s, without relaunching |
 | P4 | Select Rocket; change `body.color` in its `style.json` and save | The pointer's colour changes within 2 s |
 | P5 | Break it: delete a closing `}` and save | The pointer shows the dog paw; the menu shows **1 style couldn't load…**; clicking it lists the JSON problem, copyable |
 | P6 | Fix it and save | Rocket comes back and is selected again, without picking it |
 | P7 | Rocket selected: drag the Tail slider; click slowly, then fast | The flame shortens to nothing at the far left and flickers; every click fires 8 darts from the centre, pointing outward; fast clicks fire more |
-| P8 | Rocket selected: untick **Animate style**, then tick it again; pick the Dog paw | The flame stops flickering and holds still, then flickers again; the switch is gone from the menu for the Dog paw, and comes back ticked as you left it when you return to the rocket |
+| P8 | Rocket selected: untick **Animate** (indented right under Rocket), then tick it again; pick the Dog paw | The flame stops flickering and holds still, then flickers again; the switch is gone from the menu for the Dog paw, and comes back ticked as you left it when you return to the rocket |
 | P8 | Delete the rocket folder | It leaves the menu; the pointer shows the dog paw |
-| P9 | `$MC --pack docs/style-template`, download it again through Safari (so it's quarantined), **Import Style…** it | A preview with name, author, licence and version; **Import** selects it |
+| P9 | `$MC --pack docs/style-template`, download it again through Safari (so it's quarantined), **Manage Styles ▸ Import Style…** it | A preview with name, author, licence and version; **Import** selects it |
 | P10 | Import the same file again | The dialog says **Replace "My style" 1.0.0 with My style 1.0.0?** |
 | P11 | Import a `.maccursorstyle` that is really a renamed PNG; then one of the built-ins packed with `--pack --builtin` | A "couldn't import" alert listing the problem; a "can't import" alert about the built-in id. Nothing is written to the Styles folder |
-| P12 | **Remove Style…**, pick the template's style | Its folder is in the Trash; the pointer goes back to the dog paw |
+| P12 | **Manage Styles ▸ Remove Style…**, pick the template's style | Its folder is in the Trash; the pointer goes back to the dog paw |
 | P13 | With 3–4 user styles installed, watch Activity Monitor while idle and moving | CPU is the same as with only built-ins (T3, T4) |
 
 Style packs (`SPEC-skins.md`, #9) criteria:
@@ -136,6 +136,17 @@ Style packs (`SPEC-skins.md`, #9) criteria:
 | 8a | Import installs and selects after one confirmation; bad files write nothing | `PackArchiveTests`, `PackInstallTests`, P9–P11 |
 | 8b | The guide alone gets a pack from template to file | Making the rocket fixture from `docs/making-a-style.md` |
 | 9 | Docs let someone make a pack without reading code | `docs/making-a-style.md`, `docs/style-packs.md` |
+
+## Menu layout (`SPEC-menu-layout.md`, #56)
+
+| # | Do | Expect |
+|---|---|---|
+| M1 | Open the menu with only the built-in styles | Show pointer, Presentation mode; **Style** list; Manage Styles ▸; **For all styles** with Size, Tail, Mood ▸, Color ▸, Hide system cursor; Click sound ▸, Draw ▸; Version, Check for Updates…, Quit |
+| M2 | Look at the Size and Tail rows in light and dark mode | Each label sits left of its slider; the two labels and the two sliders line up; dragging changes the pointer live |
+| M3 | Pick Mood ▸ Wild, Color ▸ Light, then reopen | The ticks moved; the pointer reacts as before |
+| M4 | With a custom style installed, open Manage Styles ▸ | Import Style…, Remove Style…, Open Styles Folder; without custom styles there's no Remove Style… |
+| M5 | Open Draw ▸ | Draw on screen first, then Clear drawing and Next color ⌃⌥C, then Color, Thickness, fade time, and the three greyed hints last |
+| M6 | Update from 0.5.1 | Every setting (style, size, tail, mood, color, sound, drawing) is as it was |
 
 ## Updates
 

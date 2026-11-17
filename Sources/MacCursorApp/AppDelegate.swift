@@ -233,194 +233,204 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
+        let state = menuState()
+        for row in MenuLayout.main(state) { add(row, to: menu, state: state) }
+    }
 
-        let show = item("Show pointer", #selector(togglePointer), key: "p")
-        show.state = pointer.isEnabled ? .on : .off
-        menu.addItem(show)
-        let pres = item("Presentation mode", #selector(togglePresentation), key: "t")
-        pres.state = controller.presentation.isOn ? .on : .off
-        menu.addItem(pres)
-        if controller.presentation.isOn {
-            let hint = NSMenuItem(
-                title: "Clicks don't reach apps. \(Self.presentationExitHint).",
-                action: nil, keyEquivalent: "")
-            hint.isEnabled = false
-            hint.indentationLevel = 1
-            menu.addItem(hint)
-        }
-
-        menu.addItem(.separator())
-        menu.addItem(header("Style"))
+    private func menuState() -> MenuState {
         let library = StyleStore.shared.library
-        let current = library.resolved(id: pointer.styleID).id
-        for (n, pack) in library.all.enumerated() {
-            if n == library.builtins.count { menu.addItem(.separator()) }
-            let i = item(pack.name, #selector(pickSkin(_:)))
-            i.representedObject = pack.id
-            i.state = pack.id == current ? .on : .off
-            if !pack.author.isEmpty && !library.isBuiltin(id: pack.id) {
+        return MenuState(
+            styleIDs: library.all.map(\.id),
+            selectedStyleID: library.resolved(id: pointer.styleID).id,
+            selectedStyleAnimates: pointer.styleIsAnimated,
+            hasCustomStyles: !library.user.isEmpty,
+            styleFailures: library.failures.count,
+            isPresenting: controller.presentation.isOn,
+            canCheckForUpdates: updater != nil,
+            drawNeedsAccess: settings.draw.isOn && pointer.isEnabled && !controller.ink.isReady)
+    }
+
+    /// Adds the menu items for one layout row.
+    private func add(_ row: MenuRow, to menu: NSMenu, state: MenuState) {
+        switch row {
+        case .separator: menu.addItem(.separator())
+        case .header(let title): menu.addItem(header(title))
+
+        case .showPointer:
+            menu.addItem(
+                checked("Show pointer", #selector(togglePointer), pointer.isEnabled, key: "p"))
+        case .presentation:
+            menu.addItem(
+                checked(
+                    "Presentation mode", #selector(togglePresentation),
+                    controller.presentation.isOn, key: "t"))
+        case .presentationHint:
+            menu.addItem(hint("Clicks don't reach apps. \(Self.presentationExitHint)."))
+
+        case .style(let id):
+            let library = StyleStore.shared.library
+            guard let pack = library.all.first(where: { $0.id == id }) else { return }
+            let i = checked(pack.name, #selector(pickSkin(_:)), id == state.selectedStyleID)
+            i.representedObject = id
+            if !pack.author.isEmpty && !library.isBuiltin(id: id) {
                 i.toolTip = "By \(pack.author) · \(pack.license)"
             }
             menu.addItem(i)
-        }
-        if pointer.styleIsAnimated {
-            let animate = item("Animate style", #selector(toggleAnimation))
-            animate.state = pointer.animatesStyle ? .on : .off
-            menu.addItem(animate)
-        }
-        let failed = library.failures.count
-        if failed > 0 {
-            let title = "\(failed) style\(failed == 1 ? "" : "s") couldn't load…"
-            menu.addItem(item(title, #selector(showStyleProblems)))
-        }
-        menu.addItem(item("Import Style…", #selector(importStyle)))
-        if !library.user.isEmpty {
-            menu.addItem(item("Remove Style…", #selector(removeStyle)))
-        }
-        menu.addItem(item("Open Styles Folder", #selector(openStylesFolder)))
-
-        menu.addItem(header("Size"))
-        menu.addItem(
-            sliderItem(
-                value: pointer.size, range: PointerSettings.sizeRange,
-                action: #selector(sizeChanged(_:)), label: "Pointer size"))
-
-        menu.addItem(header("Tail"))
-        menu.addItem(
-            sliderItem(
-                value: pointer.tailLength, range: PointerSettings.tailLengthRange,
-                action: #selector(tailChanged(_:)), label: "Tail length"))
-
-        menu.addItem(header("Mood"))
-        for mood in Mood.allCases {
-            let i = item(mood.title, #selector(pickMood(_:)))
-            i.representedObject = mood.rawValue
-            i.state = settings.mood == mood ? .on : .off
+        case .animate:
+            let i = checked("Animate", #selector(toggleAnimation), pointer.animatesStyle)
+            i.indentationLevel = 1
             menu.addItem(i)
-        }
+        case .styleProblems(let n):
+            menu.addItem(
+                item("\(n) style\(n == 1 ? "" : "s") couldn't load…", #selector(showStyleProblems)))
+        case .manageStyles:
+            menu.addItem(submenu("Manage Styles", MenuLayout.manageStyles(state), state: state))
+        case .importStyle: menu.addItem(item("Import Style…", #selector(importStyle)))
+        case .removeStyle: menu.addItem(item("Remove Style…", #selector(removeStyle)))
+        case .openStylesFolder:
+            menu.addItem(item("Open Styles Folder", #selector(openStylesFolder)))
 
-        let colorItem = NSMenuItem(title: "Color", action: nil, keyEquivalent: "")
-        let colorMenu = NSMenu()
-        for mode in ColorMode.allCases {
-            let i = item(mode.title, #selector(pickColor(_:)))
-            i.representedObject = mode.rawValue
-            i.state = pointer.colorMode == mode ? .on : .off
-            colorMenu.addItem(i)
-        }
-        colorItem.submenu = colorMenu
-        menu.addItem(.separator())
-        menu.addItem(colorItem)
+        case .size:
+            menu.addItem(
+                sliderItem(
+                    "Size", value: pointer.size, range: PointerSettings.sizeRange,
+                    action: #selector(sizeChanged(_:)), accessibility: "Pointer size"))
+        case .tail:
+            menu.addItem(
+                sliderItem(
+                    "Tail", value: pointer.tailLength, range: PointerSettings.tailLengthRange,
+                    action: #selector(tailChanged(_:)), accessibility: "Tail length"))
+        case .mood:
+            let sub = NSMenu()
+            for mood in Mood.allCases {
+                let i = checked(mood.title, #selector(pickMood(_:)), settings.mood == mood)
+                i.representedObject = mood.rawValue
+                sub.addItem(i)
+            }
+            menu.addItem(parent("Mood", sub))
+        case .color:
+            let sub = NSMenu()
+            for mode in ColorMode.allCases {
+                let i = checked(mode.title, #selector(pickColor(_:)), pointer.colorMode == mode)
+                i.representedObject = mode.rawValue
+                sub.addItem(i)
+            }
+            menu.addItem(parent("Color", sub))
+        case .hideSystemCursor:
+            menu.addItem(
+                checked(
+                    "Hide system cursor", #selector(toggleHideCursor), pointer.hidesSystemCursor))
 
-        menu.addItem(soundMenuItem())
-        menu.addItem(drawMenuItem())
-        let hide = item("Hide system cursor", #selector(toggleHideCursor))
-        hide.state = pointer.hidesSystemCursor ? .on : .off
-        menu.addItem(hide)
+        case .clickSound: menu.addItem(soundMenuItem())
+        case .draw: menu.addItem(submenu("Draw", MenuLayout.draw(state), state: state))
+        case .drawOn:
+            menu.addItem(checked("Draw on screen", #selector(toggleDraw), settings.draw.isOn))
+        case .allowDrawing:
+            menu.addItem(item("Allow Drawing in Accessibility Settings…", #selector(allowDrawing)))
+        case .clearDrawing: menu.addItem(item("Clear drawing", #selector(clearDrawing)))
+        case .nextInkColor: menu.addItem(item("Next color", #selector(nextInkColor), key: "c"))
+        case .inkColors:
+            for color in InkColor.allCases {
+                let i = checked(
+                    color.title, #selector(pickInkColor(_:)), settings.draw.color == color)
+                i.representedObject = color.rawValue
+                i.image = swatch(color)
+                menu.addItem(i)
+            }
+        case .inkWidths:
+            for width in InkWidth.allCases {
+                let i = checked(
+                    width.title, #selector(pickInkWidth(_:)), settings.draw.width == width)
+                i.representedObject = width.rawValue
+                menu.addItem(i)
+            }
+        case .fadeTimes:
+            for seconds in DrawSettings.fadeChoices {
+                let i = checked(
+                    "\(Int(seconds)) s", #selector(pickFade(_:)),
+                    settings.draw.fadeSeconds == seconds)
+                i.representedObject = seconds
+                menu.addItem(i)
+            }
+        case .drawHints:
+            for text in [
+                "Hold ⌘ and drag: the line fades", "Hold ⌘⌥ and drag: the line stays",
+                "Hold ⌘ and right-click: clear the drawing",
+            ] {
+                menu.addItem(hint(text))
+            }
 
-        menu.addItem(.separator())
-        let version = NSMenuItem(
-            title: "Version \(Updater.version)", action: nil, keyEquivalent: "")
-        version.isEnabled = false
-        menu.addItem(version)
-        if updater != nil {
+        case .version:
+            let version = NSMenuItem(
+                title: "Version \(Updater.version)", action: nil, keyEquivalent: "")
+            version.isEnabled = false
+            menu.addItem(version)
+        case .checkForUpdates:
             menu.addItem(item("Check for Updates…", #selector(checkForUpdates)))
+        case .quit:
+            menu.addItem(
+                NSMenuItem(
+                    title: "Quit MacCursor", action: #selector(NSApplication.terminate(_:)),
+                    keyEquivalent: "q"))
         }
-        menu.addItem(
-            NSMenuItem(
-                title: "Quit MacCursor", action: #selector(NSApplication.terminate(_:)),
-                keyEquivalent: "q"))
     }
 
     /// "Click sound ▸": on/off, volume, which sound, and how it reacts.
     private func soundMenuItem() -> NSMenuItem {
         let sound = settings.sound
         let sub = NSMenu()
-        let on = item("Play click sound", #selector(toggleSound))
-        on.state = sound.isOn ? .on : .off
-        sub.addItem(on)
+        sub.addItem(checked("Play click sound", #selector(toggleSound), sound.isOn))
 
         sub.addItem(.separator())
         sub.addItem(header("Volume"))
         sub.addItem(
             sliderItem(
-                value: sound.volume, range: SoundSettings.volumeRange,
-                action: #selector(soundVolumeChanged(_:)), label: "Click sound volume"))
+                nil, value: sound.volume, range: SoundSettings.volumeRange,
+                action: #selector(soundVolumeChanged(_:)), accessibility: "Click sound volume"))
 
         sub.addItem(.separator())
         sub.addItem(header("Sound"))
         for kind in ClickSoundKind.allCases {
-            let i = item(kind.title, #selector(pickSound(_:)))
+            let i = checked(kind.title, #selector(pickSound(_:)), sound.kind == kind)
             i.representedObject = kind.rawValue
-            i.state = sound.kind == kind ? .on : .off
             sub.addItem(i)
         }
 
         sub.addItem(.separator())
-        let fast = item("Quieter when clicking fast", #selector(toggleQuieterWhenFast))
-        fast.state = sound.quieterWhenFast ? .on : .off
-        sub.addItem(fast)
-        let mood = item("Follow mood", #selector(toggleSoundFollowsMood))
-        mood.state = sound.followsMood ? .on : .off
-        sub.addItem(mood)
-
-        let parent = NSMenuItem(title: "Click sound", action: nil, keyEquivalent: "")
-        parent.submenu = sub
-        return parent
+        sub.addItem(
+            checked(
+                "Quieter when clicking fast", #selector(toggleQuieterWhenFast),
+                sound.quieterWhenFast))
+        sub.addItem(checked("Follow mood", #selector(toggleSoundFollowsMood), sound.followsMood))
+        return parent("Click sound", sub)
     }
 
-    /// "Draw ▸": on/off, how to draw, clear, color, thickness and fade time.
-    private func drawMenuItem() -> NSMenuItem {
-        let draw = settings.draw
+    private func submenu(_ title: String, _ rows: [MenuRow], state: MenuState) -> NSMenuItem {
         let sub = NSMenu()
-        let on = item("Draw on screen", #selector(toggleDraw))
-        on.state = draw.isOn ? .on : .off
-        sub.addItem(on)
-        if draw.isOn && pointer.isEnabled && !controller.ink.isReady {
-            sub.addItem(item("Allow Drawing in Accessibility Settings…", #selector(allowDrawing)))
-        }
-        for hint in [
-            "Hold ⌘ and drag: the line fades", "Hold ⌘⌥ and drag: the line stays",
-            "Hold ⌘ and right-click: clear the drawing",
-        ] {
-            let i = NSMenuItem(title: hint, action: nil, keyEquivalent: "")
-            i.isEnabled = false
-            i.indentationLevel = 1
-            sub.addItem(i)
-        }
-        sub.addItem(item("Clear drawing", #selector(clearDrawing)))
-        sub.addItem(item("Next color", #selector(nextInkColor), key: "c"))
+        for row in rows { add(row, to: sub, state: state) }
+        return parent(title, sub)
+    }
 
-        sub.addItem(.separator())
-        sub.addItem(header("Color"))
-        for color in InkColor.allCases {
-            let i = item(color.title, #selector(pickInkColor(_:)))
-            i.representedObject = color.rawValue
-            i.state = draw.color == color ? .on : .off
-            i.image = swatch(color)
-            sub.addItem(i)
-        }
+    private func parent(_ title: String, _ sub: NSMenu) -> NSMenuItem {
+        let i = NSMenuItem(title: title, action: nil, keyEquivalent: "")
+        i.submenu = sub
+        return i
+    }
 
-        sub.addItem(.separator())
-        sub.addItem(header("Thickness"))
-        for width in InkWidth.allCases {
-            let i = item(width.title, #selector(pickInkWidth(_:)))
-            i.representedObject = width.rawValue
-            i.state = draw.width == width ? .on : .off
-            sub.addItem(i)
-        }
+    private func checked(
+        _ title: String, _ action: Selector, _ on: Bool, key: String = ""
+    ) -> NSMenuItem {
+        let i = item(title, action, key: key)
+        i.state = on ? .on : .off
+        return i
+    }
 
-        sub.addItem(.separator())
-        sub.addItem(header("Fading lines disappear after"))
-        for seconds in DrawSettings.fadeChoices {
-            let i = item("\(Int(seconds)) s", #selector(pickFade(_:)))
-            i.representedObject = seconds
-            i.state = draw.fadeSeconds == seconds ? .on : .off
-            sub.addItem(i)
-        }
-
-        let parent = NSMenuItem(title: "Draw", action: nil, keyEquivalent: "")
-        parent.submenu = sub
-        return parent
+    /// A greyed, indented line of explanation.
+    private func hint(_ title: String) -> NSMenuItem {
+        let i = NSMenuItem(title: title, action: nil, keyEquivalent: "")
+        i.isEnabled = false
+        i.indentationLevel = 1
+        return i
     }
 
     /// A filled circle of the ink color, outlined so white and black show on any menu.
@@ -444,16 +454,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         return i
     }
 
+    /// A slider row, with an optional label on its left. Labelled sliders all line up.
     private func sliderItem(
-        value: Double, range: ClosedRange<Double>, action: Selector, label: String
+        _ label: String?, value: Double, range: ClosedRange<Double>, action: Selector,
+        accessibility: String
     ) -> NSMenuItem {
+        let view = NSView(frame: NSRect(x: 0, y: 0, width: 220, height: 30))
+        var x: CGFloat = 20
+        if let label {
+            let text = NSTextField(labelWithString: label)
+            text.font = .menuFont(ofSize: 0)
+            text.sizeToFit()
+            text.frame.origin = CGPoint(x: x, y: (view.bounds.height - text.frame.height) / 2)
+            view.addSubview(text)
+            x = 60
+        }
         let slider = NSSlider(
             value: value, minValue: range.lowerBound, maxValue: range.upperBound,
             target: self, action: action)
         slider.isContinuous = true
-        slider.frame = NSRect(x: 20, y: 4, width: 180, height: 22)
-        slider.setAccessibilityLabel(label)
-        let view = NSView(frame: NSRect(x: 0, y: 0, width: 220, height: 30))
+        slider.frame = NSRect(x: x, y: 4, width: 200 - x, height: 22)
+        slider.setAccessibilityLabel(accessibility)
         view.addSubview(slider)
         let item = NSMenuItem()
         item.view = view
